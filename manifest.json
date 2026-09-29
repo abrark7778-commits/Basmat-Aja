@@ -1,0 +1,16 @@
+{
+  "name": "بصمة أجا — دليل حائل الصوتي",
+  "short_name": "بصمة أجا",
+  "description": "تطبيق سياحي ذكي يتعرف على موقعك ويحكي لك قصة معالم حائل صوتياً عند اقترابك منها",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF2EB",
+  "theme_color": "#B8462B",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

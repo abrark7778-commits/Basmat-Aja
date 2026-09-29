@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>بصمة أجا</title>
+<meta name="description" content="دليل حائل الصوتي الذكي — يتعرف على موقعك ويحكي لك قصة كل معلم عند اقترابك منه">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#B8462B">
+<link rel="icon" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="بصمة أجا">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600&family=Reem+Kufi:wght@500;600;700&display=swap">
+<style>
+:root{
+  --sand:#FBF2EB; --sand2:#F3E6DA; --line:#E7D5C4; --ink:#3A1B13; --ink2:#7C5D50;
+  --rust:#B8462B; --brown:#6B2A1C; --teal:#1F84A0; --tealbg:#DCEEF3; --ok:#2F8F62;
+  --night:#1A0D09; --night2:#2B1510; --glow:#F2A66B;
+  --f-body:'Readex Pro','Segoe UI',Tahoma,sans-serif;
+  --f-disp:'Reem Kufi','Readex Pro',Tahoma,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55;overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.f{fill:currentColor;stroke:none}
+
+/* ---------- app shell ---------- */
+#app{position:relative;height:100vh;height:100dvh;width:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;background:var(--sand);overflow:hidden;isolation:isolate}
+.view{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;position:relative}
+.view::-webkit-scrollbar{display:none}
+.pane{display:none;padding:14px 18px 24px}
+.pane.on{display:block;animation:fade .35s ease}
+.pane.map.on{display:block;padding:0;height:100%}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px calc(14px + env(safe-area-inset-bottom,0px));background:rgba(251,242,235,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);position:relative;z-index:8}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:#A48878;font-size:11px;padding:6px 0;border-radius:14px;transition:color .2s}
+.tab.on{color:var(--rust);font-weight:600}
+.tab .ic{width:23px;height:23px}
+
+/* ---------- home ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.top .brand{display:flex;align-items:center;gap:10px}
+.top img{width:44px;height:44px;border-radius:12px;background:var(--sand);object-fit:cover}
+.top .t1{font-family:var(--f-disp);font-weight:700;font-size:20px;line-height:1.1}
+.top .t2{font-size:11px;color:var(--ink2);display:flex;align-items:center;gap:5px}
+.gps{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(47,143,98,.5);animation:ping 2s infinite}
+.gps.off{background:#C9A98F;animation:none}
+.icon-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--sand2);color:var(--ink2);flex:none}
+.top .tb{display:flex;gap:8px;align-items:center}
+.hero{position:relative;border-radius:26px;overflow:hidden;height:230px;color:#fff;isolation:isolate}
+.hero>svg{position:absolute;inset:0;width:100%;height:100%;z-index:-1;transform:scaleX(-1)}
+#app[dir=ltr] .hero>svg{transform:none}
+.hero .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(40,14,8,0) 25%,rgba(40,14,8,.78) 100%);z-index:-1}
+.hero .in{position:absolute;inset:auto 0 0 0;padding:18px;display:flex;flex-direction:column;gap:10px}
+.hero h2{text-shadow:0 2px 14px rgba(40,14,8,.55);margin:0;font-family:var(--f-disp);font-size:27px;line-height:1.15;font-weight:700;text-wrap:balance}
+.hero p{margin:0;font-size:12.5px;color:#F6DFCC}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 20px;border-radius:14px;background:var(--rust);color:#fff;font-weight:600;font-size:14px;box-shadow:0 8px 20px -8px rgba(184,70,43,.8);transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:rgba(255,255,255,.18);backdrop-filter:blur(6px);box-shadow:none}
+.btn.soft{background:var(--sand2);color:var(--brown);box-shadow:none}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:12px}
+.hero .btn{align-self:flex-start}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px}
+.sec h3{margin:0;font-family:var(--f-disp);font-size:19px;font-weight:600}
+.sec small{color:var(--ink2);font-size:11.5px}
+.sec button{color:var(--rust);font-size:12.5px;font-weight:500}
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cat{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px 11px;border-radius:18px;background:#fff;border:1px solid var(--line);text-align:center;transition:transform .15s,box-shadow .15s}
+.cat:active{transform:scale(.97)}
+.cat .c{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.cat .c .ic{width:24px;height:24px}
+.cat b{font-size:12.5px;font-weight:600;line-height:1.25}
+.list{display:grid;gap:10px}
+.row{display:flex;gap:12px;align-items:center;padding:10px;border-radius:18px;background:#fff;border:1px solid var(--line);text-align:start;width:100%}
+.row .th{width:62px;height:62px;border-radius:14px;overflow:hidden;flex:none;position:relative}
+.row .th svg{width:100%;height:100%;display:block}
+.row .tx{flex:1;min-width:0}
+.row .tx b{display:block;font-size:14.5px;font-weight:600;line-height:1.3}
+.row .tx span{display:flex;gap:8px;align-items:center;color:var(--ink2);font-size:11.5px;margin-top:3px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:500;color:#fff}
+.pill.mut{background:var(--sand2);color:var(--ink2)}
+.row .tx .pill,.row .tx span .pill{color:#fff!important}
+.row .tx .pill.mut{color:var(--ink2)!important}
+.round{width:40px;height:40px;border-radius:50%;background:var(--rust);color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 6px 14px -6px rgba(184,70,43,.9)}
+.round.off{background:var(--sand2);color:#B49A8B;box-shadow:none}
+.round.ok{background:var(--ok)}
+.mini-fp{display:flex;align-items:center;gap:14px;padding:14px;border-radius:22px;background:linear-gradient(135deg,#6B2A1C,#3A150E);color:#fff;text-align:start;width:100%}
+.mini-fp svg{width:64px;height:76px;flex:none}
+.mini-fp b{display:block;font-family:var(--f-disp);font-size:17px}
+.mini-fp span{font-size:12px;color:#E9CDB9}
+
+/* ---------- sponsors (placeholder strip) ---------- */
+.sponsors{margin-top:22px}
+.sponsors .strip{display:flex;gap:10px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.sponsors .strip::-webkit-scrollbar{display:none}
+.sp-card{flex:none;width:108px;height:66px;border-radius:14px;background:#fff;border:1.5px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#B49A83}
+.sp-card .ic{width:20px;height:20px}
+.sp-card b{font-size:11px;font-weight:600;color:var(--ink2)}
+.sponsors .note{font-size:11px;color:var(--ink2);margin-top:8px;line-height:1.5}
+
+/* ---------- map / radar ---------- */
+.mapwrap{position:relative;height:100%;background:#EFE2D2;overflow:hidden;display:flex;flex-direction:column}
+.mapwrap>svg{width:100%;flex:1;min-height:0}
+.pin{cursor:pointer}
+.pin .halo{fill:none;stroke-width:1.4;stroke-dasharray:3 3;opacity:.7}
+.pin.hit .halo{animation:halo 1.8s ease-out infinite}
+.me-ring{animation:mering 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.mtop{position:absolute;inset:8px 14px auto 14px;display:flex;gap:8px;z-index:4}
+.mtop .card{flex:1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:rgba(255,250,245,.94);backdrop-filter:blur(10px);box-shadow:0 10px 26px -14px rgba(60,20,10,.55)}
+.mtop .card b{display:block;font-size:13px;line-height:1.3}
+.mtop .card span{font-size:11px;color:var(--ink2)}
+.mfab{position:absolute;inset-inline:14px;bottom:14px;z-index:4;display:flex;gap:10px;align-items:stretch}
+.mfab .btn{flex:1}
+.mnolo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center;color:var(--ink2)}
+.mnolo svg{width:56px;height:56px;color:var(--ink2)}
+
+/* ---------- explore ---------- */
+.search{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:15px;background:#fff;border:1px solid var(--line);color:var(--ink2);margin-bottom:12px}
+.search input{flex:1;border:0;background:none;font:inherit;color:var(--ink);min-width:0;outline:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;margin-inline:-18px;padding-inline:18px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:99px;background:#fff;border:1px solid var(--line);font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.chip.on{background:var(--brown);border-color:var(--brown);color:#fff}
+.chip i{width:8px;height:8px;border-radius:50%}
+.empty{padding:26px 10px;text-align:center;color:var(--ink2)}
+
+/* ---------- fingerprint ---------- */
+.fp-head{text-align:center;padding-top:4px}
+.fp-head h2{margin:0;font-family:var(--f-disp);font-size:26px}
+.fp-head p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+.fp-art{position:relative;margin:10px auto 6px;width:236px;height:290px}
+.fp-art svg{width:100%;height:100%;overflow:visible}
+.fp-art .glow{position:absolute;inset:20% 10%;border-radius:50%;background:radial-gradient(circle,rgba(184,70,43,.28),transparent 68%);filter:blur(16px);transition:opacity .6s}
+.ridge{fill:none;stroke-linecap:round;stroke-width:3.2;transition:stroke .5s,opacity .5s}
+.ridge.off{stroke:#DCC7B4;opacity:.75}
+.ridge.on{stroke:var(--rust)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 4px}
+.stat{padding:12px 6px;border-radius:16px;background:#fff;border:1px solid var(--line);text-align:center}
+.stat b{display:block;font-family:var(--f-disp);font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--ink2)}
+
+/* ---------- overlays ---------- */
+.ovl{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;background:var(--sand);transform:translateY(100%);transition:transform .45s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.ovl.on{transform:none;visibility:visible}
+.sheetbg{position:absolute;inset:0;z-index:30;background:rgba(30,10,5,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+.sheetbg.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;inset-inline:0;bottom:0;z-index:35;max-height:88%;overflow:auto;background:var(--sand);border-radius:28px 28px 0 0;transform:translateY(105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);scrollbar-width:none}
+.sheet.on{transform:none}
+.sheet::-webkit-scrollbar{display:none}
+.sh-scene{height:190px;position:relative}
+.sh-scene svg{width:100%;height:100%;display:block}
+.sh-body{padding:16px 20px 26px;display:grid;gap:12px}
+.sh-body h2{margin:0;font-family:var(--f-disp);font-size:26px;line-height:1.15}
+.sh-body p{margin:0;color:#5A3A2E;line-height:1.75}
+.tagline{color:var(--ink2);font-size:12.5px;margin-top:2px}
+.facts{display:flex;gap:8px;flex-wrap:wrap}
+.facts span{padding:4px 10px;border-radius:99px;background:var(--sand2);font-size:12px;color:var(--brown)}
+.x{position:absolute;top:12px;inset-inline-start:14px;z-index:4;width:38px;height:38px;border-radius:50%;background:rgba(30,10,5,.45);backdrop-filter:blur(8px);color:#fff;display:grid;place-items:center}
+.about{padding:20px;display:flex;flex-direction:column;gap:16px;color:var(--ink)}
+.about h1{margin:0;font-family:var(--f-disp);font-size:26px}
+.about h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;color:var(--rust);font-weight:600}
+.about p{margin:0;line-height:1.75;color:#5A3A2E}
+.about ol{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+.about ol li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;color:var(--ink)}
+.about ol li::before{content:counter(s);flex:none;width:26px;height:26px;border-radius:50%;background:var(--sand2);color:var(--rust);display:grid;place-items:center;font-size:12px;font-weight:600}
+.about .chips2{display:flex;flex-wrap:wrap;gap:8px}
+.about .chips2 span{padding:5px 12px;border-radius:99px;background:var(--sand2);font-size:12.5px;color:var(--brown)}
+
+/* ---------- language sheet ---------- */
+.langrow{display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid var(--line);font-size:15px;font-weight:600;margin-bottom:8px}
+.langrow.on{background:var(--rust);color:#fff;border-color:var(--rust)}
+.langrow small{font-weight:400;font-size:12px;opacity:.8}
+
+/* ---------- player ---------- */
+.pl-scene{position:relative;height:240px;flex:none;overflow:hidden;background:#F4B78D}
+.pl-scene svg{position:absolute;inset:-4% -6%;width:112%;height:108%;animation:drift 18s ease-in-out infinite alternate;animation-play-state:paused}
+.playing .pl-scene svg{animation-play-state:running}
+.pl-scene::after{content:"";position:absolute;inset:auto 0 0 0;height:90px;background:linear-gradient(180deg,transparent,var(--sand))}
+.ai-badge{position:absolute;top:14px;inset-inline-end:14px;z-index:3;display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;background:rgba(30,10,5,.5);backdrop-filter:blur(8px);color:#fff;font-size:11.5px}
+.ai-badge .ic{width:15px;height:15px}
+.pl-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 20px calc(16px + env(safe-area-inset-bottom,0px));margin-top:-46px;position:relative;z-index:2}
+.pl-meta{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.pl-body h2{margin:0;font-family:var(--f-disp);font-size:28px;line-height:1.15}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:38px;margin:12px 0 8px}
+.bar{width:3.5px;border-radius:3px;background:linear-gradient(180deg,var(--rust),#E58B5A);height:var(--h);opacity:.5;transform:scaleY(.45);transition:opacity .3s}
+.playing .bar{opacity:1;animation:bounce .9s ease-in-out infinite alternate;animation-delay:var(--d)}
+.lines{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 0 26px;-webkit-mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(180deg,transparent,#000 12%,#000 88%,transparent)}
+.lines::-webkit-scrollbar{display:none}
+.ln{margin:0 0 12px;font-size:17px;line-height:1.85;color:#BFA596;transition:color .3s;font-weight:400}
+.ln.done{color:#8A6A5C}
+.ln.on{color:var(--ink);font-weight:500}
+.ln.rtl{direction:rtl;text-align:right}
+.ln.ltr{direction:ltr;text-align:left;font-size:15.5px}
+.ln .w{transition:color .15s}
+.ln.on .w{color:var(--ink)}
+.ln.on .w.k{color:var(--rust)}
+.prog{display:grid;gap:6px;margin-top:2px}
+.track{height:5px;border-radius:5px;background:var(--line);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E58B5A,var(--rust));border-radius:5px}
+.times{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.ctl{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.ctl .cb{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:var(--ink2)}
+.ctl .cb.t{width:auto;min-width:46px;padding:0 10px;font-size:13px;font-weight:600;border-radius:23px;background:var(--sand2);color:var(--brown)}
+.ctl .main{width:66px;height:66px;background:var(--rust);color:#fff;box-shadow:0 12px 26px -10px rgba(184,70,43,.9)}
+.ctl .main .ic{width:28px;height:28px}
+.hint{font-size:11.5px;color:var(--ink2);text-align:center;margin-top:8px;min-height:16px}
+.done-card{visibility:hidden;position:absolute;inset-inline:16px;bottom:16px;z-index:6;padding:16px;border-radius:24px;background:linear-gradient(135deg,#6B2A1C,#3A150E);color:#fff;display:flex;gap:14px;align-items:center;transform:translateY(190%);transition:transform .5s cubic-bezier(.2,.8,.2,1);box-shadow:0 24px 40px -16px rgba(0,0,0,.6)}
+.done-card.on{transform:none;visibility:visible}
+.done-card svg{width:52px;height:62px;flex:none}
+.done-card b{display:block;font-family:var(--f-disp);font-size:18px;line-height:1.25}
+.done-card span{font-size:12px;color:#E9CDB9;display:block;margin-bottom:8px}
+.done-card .btn{height:34px;font-size:12.5px;padding:0 14px;border-radius:11px}
+.done-card .btn+.btn{background:rgba(255,255,255,.14);box-shadow:none;margin-inline-start:6px}
+
+/* ---------- notifications ---------- */
+.notif{position:absolute;top:14px;inset-inline:12px;z-index:70;display:flex;gap:12px;align-items:center;padding:12px;border-radius:22px;background:rgba(255,250,245,.97);box-shadow:0 20px 40px -14px rgba(50,15,8,.65);transform:translateY(-320%);visibility:hidden;transition:transform .5s cubic-bezier(.2,.9,.25,1.15),visibility 0s .5s}
+.notif.on{transform:none;visibility:visible;transition-delay:0s}
+.notif .ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;flex:none}
+.notif .tx{flex:1;min-width:0}
+.notif b{display:block;font-size:13.5px;line-height:1.3}
+.notif span{font-size:11.5px;color:var(--ink2)}
+.toast{position:absolute;inset-inline:22px;bottom:92px;z-index:80;padding:11px 16px;border-radius:14px;background:#2A1510;color:#fff;font-size:12.5px;text-align:center;opacity:0;transform:translateY(10px);transition:.35s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+
+/* ---------- misc ---------- */
+.seg{display:flex;background:var(--sand2);border-radius:12px;padding:3px;gap:2px;margin:8px 0}
+.seg button{flex:1;border:0;background:none;border-radius:10px;padding:7px 4px;font:600 12px/1 inherit;font-family:inherit;color:var(--ink2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--rust);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.warnbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:#FBE7D8;color:var(--brown);font-size:12px;margin-bottom:10px}
+
+/* ---------- motion ---------- */
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ping{70%{box-shadow:0 0 0 7px rgba(47,143,98,0)}100%{box-shadow:0 0 0 0 rgba(47,143,98,0)}}
+@keyframes bounce{to{transform:scaleY(1)}}
+@keyframes drift{from{transform:translateX(-2.5%) scale(1.02)}to{transform:translateX(2.5%) scale(1.06)}}
+@keyframes halo{0%{r:16;opacity:.9}100%{r:44;opacity:0}}
+@keyframes mering{0%{transform:scale(.6);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-5.5h4v5.5h3.5a1 1 0 0 0 1-1V10"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></symbol>
+    <symbol id="i-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path d="M6 19c-.7-2.2-1-4.3-1-6.5C5 8.4 8 5.5 12 5.5s7 2.900 7 7c0 1.600-.2 3.200-.6 4.700"/><path d="M9 20c-.8-2-1.200-4-1.200-6.200 0-2.300 1.800-4.100 4.200-4.100s4.200 1.800 4.200 4.100c0 1.100 0 2.100-.2 3.100"/><path d="M12 13.500c0 2.300.3 4.300 1 6"/><path d="M3.500 9.500A9.500 9.500 0 0 1 12 3c3.500 0 6.500 1.900 8 4.700"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.500v13a.8.8 0 0 0 1.200.7l10.500-6.500a.8.8 0 0 0 0-1.400L9.200 4.800A.8.8 0 0 0 8 5.500z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.200" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1.200" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="m6 6 8 6-8 6z" fill="currentColor" stroke="none"/><path d="M18 6v12"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="m18 6-8 6 8 6z" fill="currentColor" stroke="none"/><path d="M6 6v12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.500M12 7.800v.2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.100 7-11.500A7 7 0 0 0 5 9.500C5 14.900 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.500 4.500 4.500L19 7.500"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.500c.6 4.200 2.300 5.900 6.500 6.500-4.200.6-5.900 2.300-6.500 6.500-.6-4.200-2.300-5.900-6.500-6.500 4.200-.6 5.900-2.300 6.500-6.500z" fill="currentColor" stroke="none"/><path d="M18.500 15.500c.3 1.900 1 2.600 2.900 2.900-1.900.3-2.600 1-2.900 2.900-.3-1.900-1-2.600-2.900-2.900 1.900-.3 2.600-1 2.900-2.900z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-head" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.500" height="6.500" rx="2"/><rect x="16.500" y="14" width="4.500" height="6.500" rx="2"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4.500" r="1.800"/><path d="m9 21 2-6-2.500-2.500 1.500-5 4 1.500 2.500 3M11 15l3 2.500V21"/></symbol>
+    <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M5 10h11v5a4.500 4.500 0 0 1-4.500 4.500h-2A4.500 4.500 0 0 1 5 15z"/><path d="M16 11.500h1.500a2.500 2.500 0 0 1 0 5H15.500"/><path d="M8 3.500c-.8 1 .8 1.800 0 3M12 3.500c-.8 1 .8 1.800 0 3"/></symbol>
+    <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 3.500v6a2 2 0 0 0 2 2v9M11 3.500v6a2 2 0 0 1-2 2M4.500 3.500v6a2 2 0 0 0 2 2"/><path d="M17.500 20.500V3.500c-2.200 1.500-3 4-3 7 0 1.500.8 2.500 3 2.500"/></symbol>
+    <symbol id="i-mount" viewBox="0 0 24 24"><path d="m2.500 19 6-10.500 3.500 6 2.500-4L21.500 19z"/><path d="m6.500 12.500 2-1.200 1.200 1.500"/></symbol>
+    <symbol id="i-fort" viewBox="0 0 24 24"><path d="M4 20.500v-11h3v-2h2v2h2v-2h2v2h2v-2h2v2h1v11z" /><path d="M10 20.500v-4.500a2 2 0 0 1 4 0v4.500"/></symbol>
+    <symbol id="i-tent" viewBox="0 0 24 24"><path d="m12 4.500-9 15h18z"/><path d="m12 19.500-3-5.500h6z"/></symbol>
+    <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="11" r="7"/><circle cx="12" cy="11" r="1.500"/><path d="M12 4v14M5 11h14M7 6l10 10M17 6 7 16M8 21.500l4-3.500 4 3.500"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6 21V4M6 5h11l-2 3.500 2 3.500H6"/></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 3 6 12h3l-4 7h14l-4-7h3z"/><path d="M12 19v3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app" dir="rtl" lang="ar">
+  <div class="view" id="view">
+    <section class="pane on" id="p-home"></section>
+    <section class="pane map" id="p-map"></section>
+    <section class="pane" id="p-explore"></section>
+    <section class="pane" id="p-print"></section>
+  </div>
+  <nav class="tabbar" id="tabs"></nav>
+  <div class="sheetbg" id="sheetbg" data-act="close-sheet"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="ovl" id="player"></div>
+  <div class="notif" id="notif"></div>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const UI2 = {"tabHome": {"ar": "الرئيسية", "en": "Home", "fr": "Accueil", "ur": "ہوم", "hi": "होम", "zh": "首页"}, "tabMap": {"ar": "الخريطة", "en": "Map", "fr": "Carte", "ur": "نقشہ", "hi": "मैप", "zh": "地图"}, "tabExplore": {"ar": "استكشف", "en": "Explore", "fr": "Découvrir", "ur": "دریافت", "hi": "अन्वेषण", "zh": "探索"}, "tabPrint": {"ar": "بصمتي", "en": "My Print", "fr": "Mon empreinte", "ur": "میری شناخت", "hi": "मेरी छाप", "zh": "我的印记"}, "heroTitle": {"ar": "اكتشف حائل<br>اسمع قصتها", "en": "Discover Hail<br>Hear its story", "fr": "Découvrez Hail<br>Écoutez son histoire", "ur": "حائل کو دریافت کریں<br>اس کی کہانی سنیں", "hi": "हाइल की खोज करें<br>इसकी कहानी सुनें", "zh": "探索哈伊勒<br>聆听它的故事"}, "heroSubtitle": {"ar": "امشِ في المدينة، ودع كل مكان يحكي لك تاريخه.", "en": "Walk the city and let every place tell its own history.", "fr": "Parcourez la ville et laissez chaque lieu raconter son histoire.", "ur": "شہر میں چلیں اور ہر جگہ کو اپنی تاریخ سنانے دیں۔", "hi": "शहर में घूमें और हर जगह को अपनी कहानी सुनाने दें।", "zh": "漫步城市，聆听每个地方讲述自己的历史。"}, "heroCta": {"ar": "تفعيل الموقع وابدأ الجولة", "en": "Enable location & start", "fr": "Activer la localisation", "ur": "لوکیشن فعال کریں", "hi": "लोकेशन सक्रिय करें", "zh": "启用定位并开始"}, "nearYouTitle": {"ar": "بالقرب منك", "en": "Near you", "fr": "Près de vous", "ur": "آپ کے قریب", "hi": "आपके पास", "zh": "您附近"}, "nearYouSub": {"ar": "يتحدّث مع حركتك", "en": "Updates as you move", "fr": "Se met à jour selon vos déplacements", "ur": "آپ کی حرکت کے ساتھ اپڈیٹ ہوتا ہے", "hi": "आपके चलने के साथ अपडेट होता है", "zh": "随您的移动更新"}, "categoriesTitle": {"ar": "استكشف حسب التصنيف", "en": "Explore by category", "fr": "Explorer par catégorie", "ur": "قسم کے لحاظ سے دریافت کریں", "hi": "श्रेणी अनुसार खोजें", "zh": "按分类探索"}, "yourPrintTitle": {"ar": "بصمتك", "en": "Your print", "fr": "Votre empreinte", "ur": "آپ کی شناخت", "hi": "आपकी छाप", "zh": "您的印记"}, "printMiniSub": {"ar": "كل قصة تسمعها تضيف خطاً جديداً إلى بصمتك في حائل", "en": "Every story you hear adds a new line to your Hail print", "fr": "Chaque histoire écoutée ajoute une ligne à votre empreinte de Hail", "ur": "ہر کہانی آپ کی حائل شناخت میں نئی لکیر جوڑتی ہے", "hi": "हर कहानी आपकी हाइल छाप में नई रेखा जोड़ती है", "zh": "每一个故事都会为您的哈伊勒印记添加新的一笔"}, "mapNearestLabel": {"ar": "أقرب قصة إليك", "en": "Nearest story", "fr": "Histoire la plus proche", "ur": "قریب ترین کہانی", "hi": "निकटतम कहानी", "zh": "最近的故事"}, "mapEnableBtn": {"ar": "تفعيل الموقع", "en": "Enable location", "fr": "Activer la localisation", "ur": "لوکیشن فعال کریں", "hi": "लोकेशन सक्रिय करें", "zh": "启用定位"}, "mapNoLocation": {"ar": "فعّل الموقع لتشاهد موقعك واتجاه المعالم منك", "en": "Enable location to see yourself and the direction of each site", "fr": "Activez la localisation pour vous situer et voir la direction des sites", "ur": "اپنی پوزیشن اور مقامات کی سمت دیکھنے کے لیے لوکیشن فعال کریں", "hi": "अपनी स्थिति और स्थलों की दिशा देखने के लिए लोकेशन सक्रिय करें", "zh": "启用定位以查看您的位置和各地点的方向"}, "mapHint": {"ar": "بوصلة تقريبية تُظهر اتجاه كل معلم والمسافة الحقيقية إليه", "en": "An approximate compass showing each site's real direction and distance", "fr": "Une boussole approximative indiquant la direction et la distance réelles de chaque site", "ur": "ایک تخمینی قطب نما جو ہر مقام کی حقیقی سمت اور فاصلہ دکھاتا ہے", "hi": "एक अनुमानित कम्पास जो हर स्थल की वास्तविक दिशा और दूरी दिखाता है", "zh": "一个近似指南针，显示每个地点的真实方向和距离"}, "searchPlaceholder": {"ar": "ابحث عن معلم أو مكان", "en": "Search a landmark or place", "fr": "Rechercher un lieu", "ur": "کوئی مقام تلاش کریں", "hi": "कोई स्थान खोजें", "zh": "搜索地点或景点"}, "filterAll": {"ar": "الكل", "en": "All", "fr": "Tout", "ur": "تمام", "hi": "सभी", "zh": "全部"}, "emptyResults": {"ar": "لا توجد نتائج مطابقة", "en": "No matching results", "fr": "Aucun résultat", "ur": "کوئی نتیجہ نہیں ملا", "hi": "कोई परिणाम नहीं मिला", "zh": "没有匹配结果"}, "closeLabel": {"ar": "إغلاق", "en": "Close", "fr": "Fermer", "ur": "بند کریں", "hi": "बंद करें", "zh": "关闭"}, "listenBtn": {"ar": "استمع لحكاية المكان", "en": "Listen to the story", "fr": "Écouter l'histoire", "ur": "کہانی سنیں", "hi": "कहानी सुनें", "zh": "收听故事"}, "showOnMapBtn": {"ar": "اعرضه على الخريطة", "en": "Show on map", "fr": "Afficher sur la carte", "ur": "نقشے پر دکھائیں", "hi": "मैप पर दिखाएँ", "zh": "在地图上显示"}, "noAudioMsg": {"ar": "هذا المكان يُعرض للاستكشاف فقط، بدون نبذة صوتية.", "en": "This place is for browsing only, with no audio story.", "fr": "Ce lieu est présenté à titre indicatif, sans récit audio.", "ur": "یہ جگہ صرف معلومات کے لیے ہے، اس کی کوئی آڈیو کہانی نہیں۔", "hi": "यह स्थान केवल जानकारी के लिए है, इसकी कोई ऑडियो कहानी नहीं है।", "zh": "此地点仅供浏览，没有语音讲解。"}, "aiBadgeLabel": {"ar": "راوٍ صوتي", "en": "Audio narrator", "fr": "Narrateur audio", "ur": "صوتی راوی", "hi": "ऑडियो कथावाचक", "zh": "语音讲解"}, "prevLabel": {"ar": "السابق", "en": "Previous", "fr": "Précédent", "ur": "پچھلا", "hi": "पिछला", "zh": "上一段"}, "nextLabel": {"ar": "التالي", "en": "Next", "fr": "Suivant", "ur": "اگلا", "hi": "आगे", "zh": "下一段"}, "playLabel": {"ar": "تشغيل", "en": "Play", "fr": "Lecture", "ur": "چلائیں", "hi": "चलाएँ", "zh": "播放"}, "pauseLabel": {"ar": "إيقاف مؤقت", "en": "Pause", "fr": "Pause", "ur": "موقوف", "hi": "रोकें", "zh": "暂停"}, "hintNoVoice": {"ar": "صوت تجريبي: جهازك بدون صوت مطابق، فيُعرض النص بإيقاع القراءة", "en": "No matching voice on this device — text runs at reading pace", "fr": "Aucune voix correspondante sur cet appareil — le texte suit un rythme de lecture", "ur": "اس ڈیوائس پر مماثل آواز موجود نہیں — متن پڑھنے کی رفتار سے چلے گا", "hi": "इस डिवाइस पर मिलती आवाज़ नहीं — पाठ पढ़ने की गति से चलेगा", "zh": "此设备没有匹配的语音——文字将按阅读节奏显示"}, "doneNewLines": {"ar": "أُضيفت خطوط جديدة إلى بصمتك", "en": "New lines added to your print", "fr": "De nouvelles lignes ont été ajoutées à votre empreinte", "ur": "آپ کی شناخت میں نئی لکیریں شامل ہوئیں", "hi": "आपकी छाप में नई रेखाएँ जुड़ीं", "zh": "您的印记新增了线条"}, "doneAlreadyHeard": {"ar": "استمعت لهذه الحكاية من قبل", "en": "You have heard this story before", "fr": "Vous avez déjà écouté cette histoire", "ur": "آپ یہ کہانی پہلے سن چکے ہیں", "hi": "आप यह कहानी पहले सुन चुके हैं", "zh": "您之前已经听过这个故事"}, "seeMyPrint": {"ar": "شاهد بصمتي", "en": "See my print", "fr": "Voir mon empreinte", "ur": "میری شناخت دیکھیں", "hi": "मेरी छाप देखें", "zh": "查看我的印记"}, "continueTour": {"ar": "تابع الجولة", "en": "Continue tour", "fr": "Continuer la visite", "ur": "سفر جاری رکھیں", "hi": "यात्रा जारी रखें", "zh": "继续游览"}, "printHeadTitle": {"ar": "بصمتك في حائل", "en": "Your Hail print", "fr": "Votre empreinte à Hail", "ur": "حائل میں آپ کی شناخت", "hi": "हाइल में आपकी छाप", "zh": "您在哈伊勒的印记"}, "printHeadSubZero": {"ar": "استمع لأول قصة لتبدأ ببناء بصمتك", "en": "Listen to your first story to start your print", "fr": "Écoutez votre première histoire pour démarrer votre empreinte", "ur": "اپنی شناخت بنانے کے لیے پہلی کہانی سنیں", "hi": "अपनी छाप बनाने के लिए पहली कहानी सुनें", "zh": "聆听第一个故事，开始建立您的印记"}, "printHeadSubSome": {"ar": "كل حكاية تسمعها تضيف خطوطاً جديدة", "en": "Every story you hear adds new lines", "fr": "Chaque histoire écoutée ajoute de nouvelles lignes", "ur": "ہر کہانی نئی لکیریں شامل کرتی ہے", "hi": "हर कहानी नई रेखाएँ जोड़ती है", "zh": "每个故事都会增添新的线条"}, "statStoriesHeard": {"ar": "حكايات مسموعة", "en": "Stories heard", "fr": "Histoires écoutées", "ur": "سنی گئی کہانیاں", "hi": "सुनी गई कहानियाँ", "zh": "已听故事"}, "statMinutes": {"ar": "دقائق استماع", "en": "Minutes listened", "fr": "Minutes écoutées", "ur": "سننے کے منٹ", "hi": "सुनने के मिनट", "zh": "收听分钟数"}, "statBadges": {"ar": "شارات", "en": "Badges", "fr": "Badges", "ur": "بیجز", "hi": "बैज", "zh": "徽章"}, "hailStoriesTitle": {"ar": "حكايات حائل", "en": "Hail stories", "fr": "Histoires de Hail", "ur": "حائل کی کہانیاں", "hi": "हाइल की कहानियाँ", "zh": "哈伊勒的故事"}, "printComplete": {"ar": "اكتملت بصمتك", "en": "Print complete", "fr": "Empreinte complète", "ur": "آپ کی شناخت مکمل", "hi": "आपकी छाप पूरी", "zh": "印记已完成"}, "aboutTitle": {"ar": "عن بصمة أجا", "en": "About Basmat Aja", "fr": "À propos de Basmat Aja", "ur": "بصمة أجا کے بارے میں", "hi": "बसमत अजा के बारे में", "zh": "关于 Basmat Aja"}, "projectDesc": {"ar": "بصمة أجا تطبيق سياحي صوتي يتعرّف على موقعك في حائل، ويحكي لك قصة كل معلم تراثي تقترب منه بلغتك المفضّلة — بدون إنترنت مكلف أو اشتراك، مباشرة من متصفح جوالك.", "en": "Basmat Aja is an audio tour guide that recognises your location in Hail and tells you the story of every heritage site you approach, in your own language — no subscription needed, straight from your phone's browser.", "fr": "Basmat Aja est un guide audio qui reconnaît votre position à Hail et vous raconte l'histoire de chaque site patrimonial que vous approchez, dans votre langue — sans abonnement, directement depuis le navigateur de votre téléphone.", "ur": "بصمة أجا ایک صوتی سیاحتی گائیڈ ہے جو حائل میں آپ کی لوکیشن پہچانتا ہے اور جس ثقافتی مقام کے قریب آپ جائیں اس کی کہانی آپ کی زبان میں سناتا ہے — کسی سبسکرپشن کے بغیر، سیدھا آپ کے موبائل براؤزر سے۔", "hi": "बसमत अजा एक ऑडियो टूर गाइड है जो हाइल में आपकी लोकेशन पहचानता है और जिस भी विरासत स्थल के पास आप जाते हैं उसकी कहानी आपकी भाषा में सुनाता है — किसी सदस्यता के बिना, सीधे आपके फ़ोन के ब्राउज़र से।", "zh": "Basmat Aja 是一款语音导览应用，能识别您在哈伊勒的位置，并用您的语言讲述您所接近的每个文化遗产地点的故事——无需订阅，直接通过手机浏览器使用。"}, "howItWorksTitle": {"ar": "كيف يعمل التطبيق", "en": "How it works", "fr": "Comment ça marche", "ur": "یہ کیسے کام کرتا ہے", "hi": "यह कैसे काम करता है", "zh": "使用方法"}, "step1": {"ar": "اضغط «تفعيل الموقع» في الرئيسية", "en": "Tap \"Enable location\" on the home screen", "fr": "Appuyez sur « Activer la localisation » sur l’accueil", "ur": "ہوم اسکرین پر «لوکیشن فعال کریں» دبائیں", "hi": "होम स्क्रीन पर «लोकेशन सक्रिय करें» दबाएँ", "zh": "在首页点击\"启用定位\""}, "step2": {"ar": "امشِ في المدينة، وتابع أقرب المعالم إليك", "en": "Walk around the city and watch the nearest sites update", "fr": "Parcourez la ville et suivez les sites les plus proches", "ur": "شہر میں چلیں اور قریب ترین مقامات دیکھیں", "hi": "शहर में घूमें और निकटतम स्थल देखें", "zh": "在城市中行走，查看最近的地点"}, "step3": {"ar": "عند الاقتراب من معلم يصلك إشعار، اضغط «استمع»", "en": "When you near a site you’ll get an alert — tap \"Listen\"", "fr": "En approchant d’un site, une alerte apparaît — appuyez sur « Écouter »", "ur": "کسی مقام کے قریب پہنچنے پر اطلاع آئے گی — «سنیں» دبائیں", "hi": "किसी स्थल के पास पहुँचने पर सूचना आएगी — «सुनें» दबाएँ", "zh": "接近地点时会收到提醒——点击\"收听\""}, "step4": {"ar": "اختر لغتك من الأعلى، وشاهد بصمتك تكبر في «بصمتي»", "en": "Pick your language above, and watch your print grow in \"My Print\"", "fr": "Choisissez votre langue en haut, et voyez votre empreinte grandir", "ur": "اوپر سے اپنی زبان منتخب کریں، اور «میری شناخت» میں اپنی شناخت بڑھتی دیکھیں", "hi": "ऊपर से अपनी भाषा चुनें, और «मेरी छाप» में अपनी छाप बढ़ते देखें", "zh": "在上方选择您的语言，观看您的印记在\"我的印记\"中增长"}, "teamTitle": {"ar": "الفريق", "en": "The team", "fr": "L'équipe", "ur": "ٹیم", "hi": "टीम", "zh": "团队"}, "techTitle": {"ar": "المسار التقني", "en": "Technical path", "fr": "Approche technique", "ur": "تکنیکی نقطہ نظر", "hi": "तकनीकी दृष्टिकोण", "zh": "技术路线"}, "notifNearPrefix": {"ar": "وصلت قرب", "en": "You are near", "fr": "Vous êtes près de", "ur": "آپ قریب پہنچ گئے", "hi": "आप पास पहुँच गए", "zh": "您已靠近"}, "notifReady": {"ar": "قصة صوتية جاهزة", "en": "audio story ready", "fr": "histoire audio prête", "ur": "آڈیو کہانی تیار ہے", "hi": "ऑडियो कहानी तैयार है", "zh": "语音故事已就绪"}, "listenShort": {"ar": "استمع", "en": "Listen", "fr": "Écouter", "ur": "سنیں", "hi": "सुनें", "zh": "收听"}, "installHint": {"ar": "📲 لإضافة التطبيق لشاشتك الرئيسية: افتح قائمة المتصفح واختر «إضافة إلى الشاشة الرئيسية»", "en": "📲 To add the app to your home screen: open the browser menu and choose \"Add to Home Screen\"", "fr": "📲 Pour ajouter l’application à votre écran d’accueil : ouvrez le menu du navigateur", "ur": "📲 ایپ کو ہوم اسکرین پر شامل کرنے کے لیے براؤزر مینو کھولیں", "hi": "📲 ऐप को होम स्क्रीन पर जोड़ने के लिए ब्राउज़र मेनू खोलें", "zh": "📲 将应用添加到主屏幕：打开浏览器菜单"}, "statusError": {"ar": "تعذّر الوصول للموقع — تأكد من تفعيل صلاحية الموقع", "en": "Could not access location — check location permission", "fr": "Impossible d'accéder à la localisation", "ur": "لوکیشن تک رسائی ممکن نہیں", "hi": "लोकेशन तक पहुँच नहीं हो सकी", "zh": "无法访问定位"}, "statusActivating": {"ar": "جاري تفعيل الموقع...", "en": "Activating location...", "fr": "Activation de la localisation...", "ur": "لوکیشن فعال کی جا رہی ہے...", "hi": "लोकेशन सक्रिय की जा रही है...", "zh": "正在启用定位..."}, "statusNoGeo": {"ar": "المتصفح لا يدعم تحديد الموقع", "en": "Geolocation not supported", "fr": "Géolocalisation non prise en charge", "ur": "براؤزر لوکیشن سپورٹ نہیں کرتا", "hi": "ब्राउज़र लोकेशन समर्थन नहीं करता", "zh": "浏览器不支持定位"}, "distEnableLocation": {"ar": "فعّل الموقع لعرض المسافة", "en": "Enable location for distance", "fr": "Activez la localisation pour la distance", "ur": "فاصلہ دیکھنے کے لیے لوکیشن فعال کریں", "hi": "दूरी देखने के लिए लोकेशन सक्रिय करें", "zh": "启用定位以查看距离"}, "playBtnLabel": {"ar": "شغّل", "en": "Play", "fr": "Lire", "ur": "چلائیں", "hi": "चलाएँ", "zh": "播放"}, "teamNames": {"ar": "أبرار خالد، جنى الحربي", "en": "Abrar Khaled, Jana Al-Harbi", "fr": "Abrar Khaled, Jana Al-Harbi", "ur": "ابرار خالد، جنیٰ الحربی", "hi": "अबरार ख़ालेद, जना अल-हरबी", "zh": "Abrar Khaled、Jana Al-Harbi"}, "techChips": [{"ar": "تحديد موقع GPS وتنبيه عند الاقتراب", "en": "GPS location & proximity alerts", "fr": "Localisation GPS et alertes de proximité", "ur": "GPS لوکیشن اور قربت کی اطلاعات", "hi": "GPS लोकेशन और नज़दीकी सूचनाएँ", "zh": "GPS 定位与临近提醒"}, {"ar": "دعم 6 لغات للزوار", "en": "Support for 6 visitor languages", "fr": "Prise en charge de 6 langues", "ur": "6 زبانوں کی سہولت", "hi": "6 भाषाओं का समर्थन", "zh": "支持6种语言"}, {"ar": "بدون تحميل — يعمل من المتصفح مباشرة", "en": "No download — runs straight in your browser", "fr": "Sans téléchargement — fonctionne dans le navigateur", "ur": "کوئی ڈاؤن لوڈ نہیں — براہ راست براؤزر میں چلتا ہے", "hi": "कोई डाउनलोड नहीं — सीधे ब्राउज़र में चलता है", "zh": "无需下载——直接在浏览器中运行"}, {"ar": "محتوى تاريخي تم التحقق منه بالبحث", "en": "Historical content verified through research", "fr": "Contenu historique vérifié par la recherche", "ur": "تحقیق سے تصدیق شدہ تاریخی مواد", "hi": "शोध से सत्यापित ऐतिहासिक सामग्री", "zh": "经过研究核实的历史内容"}], "sponsorsTitle": {"ar": "برعاية", "en": "Sponsors", "fr": "Sponsors", "ur": "کفیل", "hi": "प्रायोजक", "zh": "赞助商"}, "sponsorsNote": {"ar": "أماكن نموذجية لشعارات الرعاة — لا توجد شراكات فعلية معلنة حالياً", "en": "Placeholder spots for sponsor logos — no confirmed partners yet", "fr": "Emplacements types pour les logos des sponsors — aucun partenaire confirmé pour le moment", "ur": "کفیلوں کے لوگو کے لیے نمونہ جگہیں — فی الحال کوئی حتمی پارٹنر نہیں", "hi": "प्रायोजक लोगो के लिए नमूना स्थान — अभी कोई पुष्ट भागीदार नहीं", "zh": "赞助商标志的示例位置——目前尚无确定的合作伙伴"}, "sponsorLabel": {"ar": "راعٍ", "en": "Sponsor", "fr": "Sponsor", "ur": "کفیل", "hi": "प्रायोजक", "zh": "赞助商"}, "statusErrorDenied": {"ar": "تم رفض إذن الموقع — فعّله من إعدادات المتصفح لهذا الرابط، ثم اضغط «إعادة المحاولة»", "en": "Location permission was denied — enable it in your browser's site settings, then tap Retry", "fr": "La permission de localisation a été refusée — activez-la dans les paramètres du navigateur, puis réessayez", "ur": "لوکیشن کی اجازت مسترد کر دی گئی — براؤزر کی سائٹ سیٹنگز میں اسے فعال کریں، پھر دوبارہ کوشش کریں", "hi": "लोकेशन की अनुमति अस्वीकार कर दी गई — ब्राउज़र की साइट सेटिंग्स में इसे सक्षम करें, फिर पुनः प्रयास करें", "zh": "定位权限被拒绝——请在浏览器的网站设置中启用它，然后重试"}, "statusErrorUnavailable": {"ar": "تعذّر تحديد موقعك — تأكد من تفعيل خدمة الموقع (GPS) في جهازك", "en": "Could not determine your location — make sure your device's location (GPS) service is on", "fr": "Impossible de déterminer votre position — vérifiez que le GPS est activé sur votre appareil", "ur": "آپ کی لوکیشن معلوم نہیں ہو سکی — یقینی بنائیں کہ ڈیوائس کی لوکیشن (GPS) سروس آن ہے", "hi": "आपकी लोकेशन पता नहीं चल सकी — सुनिश्चित करें कि डिवाइस की लोकेशन (GPS) सेवा चालू है", "zh": "无法确定您的位置——请确保设备的定位（GPS）服务已开启"}, "statusErrorTimeout": {"ar": "استغرق تحديد الموقع وقتاً طويلاً — تأكد من الاتصال بالإنترنت وحاول مرة أخرى", "en": "Locating you took too long — check your internet connection and try again", "fr": "La localisation a pris trop de temps — vérifiez votre connexion internet et réessayez", "ur": "لوکیشن معلوم کرنے میں زیادہ وقت لگا — انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں", "hi": "लोकेशन पता करने में बहुत समय लगा — इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें", "zh": "定位耗时过长——请检查网络连接并重试"}, "retryLabel": {"ar": "إعادة المحاولة", "en": "Retry", "fr": "Réessayer", "ur": "دوبارہ کوشش کریں", "hi": "फिर कोशिश करें", "zh": "重试"}, "iframeHint": {"ar": "إذا كنت تجرّب الرابط داخل تطبيق آخر (مثل معاينة داخل محادثة)، افتحه في نافذة متصفح مستقلة — بعض المتصفحات تمنع تحديد الموقع داخل الإطارات المُضمّنة.", "en": "If you're trying this inside another app's preview (like an embedded chat view), open the link in its own browser tab — some browsers block location access inside embedded frames.", "fr": "Si vous testez ce lien dans l'aperçu intégré d'une autre application, ouvrez-le dans un onglet de navigateur indépendant — certains navigateurs bloquent la localisation dans les cadres intégrés.", "ur": "اگر آپ یہ لنک کسی دوسری ایپ کے پیش نظارے میں کھول رہے ہیں، تو اسے براؤزر کے اپنے الگ ٹیب میں کھولیں — کچھ براؤزر ایمبیڈڈ فریمز میں لوکیشن بلاک کر دیتے ہیں۔", "hi": "यदि आप इसे किसी और ऐप के प्रीव्यू में खोल रहे हैं, तो इसे ब्राउज़र के अपने अलग टैब में खोलें — कुछ ब्राउज़र एम्बेडेड फ़्रेम में लोकेशन ब्लॉक कर देते हैं।", "zh": "如果您是在其他应用的预览中打开此链接（如嵌入式聊天视图），请在浏览器的独立标签页中打开它——某些浏览器会阻止嵌入式框架中的定位访问。"}};
+
+const PLACES = [
+  { id:"barzan", cat:'heritage', scene:"barzan", lat:27.5195, lng:41.695,
+    name:{"ar": "قصر برزان", "en": "Barzan Palace", "fr": "Palais de Barzan", "ur": "قصرِ برزان", "hi": "बरज़ान महल", "zh": "巴尔赞宫"},
+    sub:{"ar": "أبراج تراثية أيقونية في قلب حائل", "en": "Iconic heritage towers in the heart of Hail", "fr": "Tours patrimoniales emblématiques au cœur de Hail", "ur": "حائل کے قلب میں تاریخی مینار", "hi": "हाइल के केंद्र में ऐतिहासिक मीनार", "zh": "哈伊勒市中心的标志性历史塔楼"},
+    fact:{"ar": "أبراج ارتفاعها نحو 10 أمتار", "en": "Towers about 10 m tall", "fr": "Tours d'environ 10 m", "ur": "میناروں کی اونچائی تقریباً 10 میٹر", "hi": "मीनारों की ऊँचाई लगभग 10 मीटर", "zh": "塔楼高约10米"},
+    text:{"ar": ["أنت الآن عند قصر برزان، أحد أبرز المعالم التاريخية في قلب مدينة حائل.", "تتميز أبراجه المرتفعة بنحو عشرة أمتار، وقد صارت من أشهر الصور المعبّرة عن المدينة.", "يعود تاريخه إلى أكثر من مئتي عام، وكان جزءاً من حياة المدينة وحمايتها.", "تخيّل الحراس فوق أبراجه، وهم يراقبون الطرق القادمة إلى المدينة.", "اقترب من جدرانه وأبراجه، وتأمل هذا الطراز الذي بقي شاهداً على أكثر من مئتي عام."], "en": ["You are now at Barzan Palace, one of the most prominent historical landmarks in the heart of Hail.", "Its towers stand about ten metres tall and have become one of the best-known images of the city.", "Its history goes back more than two hundred years, and it was part of the life and protection of the city.", "Imagine the guards on top of the towers, watching the roads that lead into the city.", "Step closer to the walls and towers, and take in a style that has stood as a witness for over two hundred years."], "fr": ["Vous êtes maintenant au palais de Barzan, l'un des monuments historiques les plus marquants du cœur de la ville de Hail.", "Ses tours, hautes d'environ dix mètres, sont devenues l'une des images les plus célèbres de la ville.", "Son histoire remonte à plus de deux cents ans, et il faisait partie de la vie et de la protection de la ville.", "Imaginez les gardes au sommet de ses tours, surveillant les routes menant vers la ville.", "Approchez-vous de ses murs et de ses tours, et contemplez ce style qui témoigne de plus de deux siècles d'histoire."], "ur": ["اب آپ قصرِ برزان کے پاس کھڑے ہیں، جو حائل شہر کے قلب میں موجود سب سے نمایاں تاریخی مقامات میں سے ایک ہے۔", "اس کے بلند مینار تقریباً دس میٹر اونچے ہیں، اور یہ شہر کی سب سے مشہور تصویروں میں شمار ہوتے ہیں۔", "اس کی تاریخ دو سو سال سے زیادہ پرانی ہے، اور یہ شہر کی زندگی اور حفاظت کا حصہ رہا ہے۔", "تصور کریں کہ پہرے دار ان میناروں کے اوپر کھڑے شہر کی طرف آنے والے راستوں کی نگرانی کر رہے ہیں۔", "اس کی دیواروں اور میناروں کے قریب جائیں، اور اس طرزِ تعمیر پر غور کریں جو دو سو سال سے زیادہ عرصے سے گواہ بنا ہوا ہے۔"], "hi": ["अब आप बरज़ान महल के सामने खड़े हैं, जो हाइल शहर के दिल में स्थित सबसे प्रमुख ऐतिहासिक स्थलों में से एक है।", "इसके ऊँचे मीनार लगभग दस मीटर ऊँचे हैं, और यह शहर की सबसे प्रसिद्ध तस्वीरों में से एक बन गया है।", "इसका इतिहास दो सौ साल से भी पुराना है, और यह शहर के जीवन और सुरक्षा का हिस्सा रहा है।", "कल्पना कीजिए कि पहरेदार इन मीनारों के ऊपर खड़े होकर शहर की ओर आने वाले रास्तों की निगरानी कर रहे हैं।", "इसकी दीवारों और मीनारों के करीब जाएँ, और उस शैली को महसूस करें जो दो सौ साल से भी अधिक समय से गवाह बनी हुई है।"], "zh": ["您现在来到了巴尔赞宫，这是哈伊勒市中心最著名的历史地标之一。", "它的塔楼高约十米，已成为这座城市最具代表性的景象之一。", "它的历史可追溯到两百多年前，曾是这座城市生活与防御的一部分。", "想象一下卫兵站在塔楼上，注视着通往城市的道路。", "走近它的城墙和塔楼，细细品味这座见证了两百多年历史的建筑风格。"]},
+  },
+  { id:"qishlah", cat:'heritage', scene:"palace", lat:27.51906, lng:41.69442,
+    name:{"ar": "قصر القشلة", "en": "Al-Qishlah Palace", "fr": "Palais Al-Qishlah", "ur": "قصرِ قشلہ", "hi": "क़श्ला महल", "zh": "盖世拉宫"},
+    sub:{"ar": "قلعة حفظت الأمن قديماً وتصون التراث اليوم", "en": "A fortress that once kept the peace, now preserves heritage", "fr": "Une forteresse qui protégeait la région, aujourd'hui gardienne du patrimoine", "ur": "قلعہ جو ماضی میں امن کی حفاظت کرتا تھا، آج ورثہ محفوظ رکھتا ہے", "hi": "किला जो पहले सुरक्षा करता था, आज विरासत सहेजता है", "zh": "曾守护安全、如今守护遗产的堡垒"},
+    fact:{"ar": "8 أبراج و12 متر ارتفاعاً", "en": "8 towers, 12 m tall", "fr": "8 tours de 12 m", "ur": "8 مینار، 12 میٹر بلند", "hi": "8 मीनार, 12 मीटर ऊँचे", "zh": "8座塔楼，高12米"},
+    text:{"ar": ["مرحباً بك عند قصر القشلة، أحد أبرز المعالم التاريخية في حائل.", "شُيّد القصر في عهد الملك عبدالعزيز، وكان له دور مهم في حفظ الأمن في المنطقة.", "تلاحظ أبراجه المرتفعة وجدرانه السميكة وساحته الواسعة التي شهدت أياماً كثيرة من تاريخ المدينة.", "واليوم تحوّل من حصن للحماية إلى مكان يصون التراث ويستقبل الزوار.", "ادخل من بوابته الكبيرة، وامشِ ببطء، فكل ركن هنا يروي جزءاً من الحكاية."], "en": ["Welcome to Al-Qishlah Palace, one of the most prominent historical landmarks in Hail.", "It was built in the reign of King Abdulaziz and played an important role in keeping the region secure.", "Notice the tall towers, the thick walls and the wide courtyard that has seen many days of the city's history.", "Today it has moved from a fortress of protection to a place that preserves heritage and welcomes visitors.", "Walk in through the great gate, take it slowly, because every corner here tells part of the story."], "fr": ["Bienvenue au palais Al-Qishlah, l'un des monuments historiques les plus marquants de Hail.", "Il fut construit sous le règne du roi Abdulaziz et joua un rôle important dans le maintien de la sécurité de la région.", "Remarquez ses hautes tours, ses murs épais et sa vaste cour qui a été témoin de nombreux jours de l'histoire de la ville.", "Aujourd'hui, cette forteresse de protection est devenue un lieu qui préserve le patrimoine et accueille les visiteurs.", "Entrez par sa grande porte, avancez lentement, car chaque coin ici raconte une partie de l'histoire."], "ur": ["قصرِ قشلہ میں خوش آمدید، جو حائل کے سب سے نمایاں تاریخی مقامات میں سے ایک ہے۔", "یہ قصر شاہ عبدالعزیز کے دور میں تعمیر کیا گیا تھا، اور علاقے کی حفاظت میں اس کا اہم کردار رہا ہے۔", "آپ اس کے بلند مینار، موٹی دیواریں اور وسیع صحن دیکھ سکتے ہیں جس نے شہر کی تاریخ کے کئی دن دیکھے ہیں۔", "آج یہ حفاظتی قلعہ ایک ایسی جگہ میں بدل چکا ہے جو ورثے کی حفاظت کرتی ہے اور زائرین کا استقبال کرتی ہے۔", "اس کے بڑے دروازے سے اندر داخل ہوں، آہستہ چلیں، کیونکہ یہاں کا ہر گوشہ کہانی کا ایک حصہ سناتا ہے۔"], "hi": ["क़श्ला महल में आपका स्वागत है, जो हाइल के सबसे प्रमुख ऐतिहासिक स्थलों में से एक है।", "यह महल राजा अब्दुलअज़ीज़ के शासनकाल में बनाया गया था, और क्षेत्र की सुरक्षा बनाए रखने में इसकी अहम भूमिका रही है।", "आप इसके ऊँचे मीनार, मोटी दीवारें और विशाल आँगन देख सकते हैं जिसने शहर के इतिहास के कई दिन देखे हैं।", "आज यह सुरक्षा के किले से बदलकर एक ऐसी जगह बन गया है जो विरासत को संजोता है और आगंतुकों का स्वागत करता है।", "इसके बड़े फाटक से अंदर जाएँ, धीरे-धीरे चलें, क्योंकि यहाँ का हर कोना कहानी का एक हिस्सा सुनाता है।"], "zh": ["欢迎来到盖世拉宫，这是哈伊勒最著名的历史地标之一。", "该宫殿建于阿卜杜勒阿齐兹国王统治时期，在维护地区安全方面发挥了重要作用。", "您可以看到高耸的塔楼、厚实的城墙和宽阔的庭院，它们见证了这座城市历史上的许多岁月。", "如今，它已从一座防御堡垒变成了一处保护文化遗产并迎接游客的场所。", "从它的大门走进去，慢慢地走，因为这里的每一个角落都在讲述着故事的一部分。"]},
+  },
+  { id:"aja", cat:'heritage', scene:"peaks", lat:27.53, lng:41.57,
+    name:{"ar": "جبل أجا", "en": "Mount Aja", "fr": "Mont Aja", "ur": "جبلِ اجا", "hi": "जबल अजा", "zh": "阿贾山"},
+    sub:{"ar": "أحد جبلي طيّئ، حاضر في الشعر والحكايات", "en": "One of the two mountains of Tayy, alive in poetry and tales", "fr": "L'une des deux montagnes de Tayy, présente dans la poésie et les récits", "ur": "طیء کے دو پہاڑوں میں سے ایک، شاعری اور کہانیوں میں زندہ", "hi": "तय्य के दो पहाड़ों में से एक, कविता और कहानियों में जीवित", "zh": "泰伊双山之一，活在诗歌与传说中"},
+    fact:{"ar": "قمة بارتفاع 1550 متراً", "en": "Peak at 1,550 m", "fr": "Sommet à 1 550 m", "ur": "چوٹی کی بلندی 1550 میٹر", "hi": "शिखर की ऊँचाई 1550 मीटर", "zh": "山峰海拔1550米"},
+    text:{"ar": ["أنت الآن أمام جبل أجا، الذي أخذت منه حائل اسمها وهويتها.", "يُعرف أجا مع جبل سلمى بجبلي طيّئ، وقد ذكرهما الشعراء العرب في قصائدهم منذ القدم.", "وارتبط هذان الجبلان بقبيلة طيّئ التي خرج منها حاتم الطائي، رمز الكرم عند العرب.", "تحكي الروايات القديمة قصة حب جمعت أجأ وسلمى، ومنها جاء اسما الجبلين.", "اليوم تستقبل قممه ومساراته محبي المشي والتصوير، وتمنحهم إطلالة على واحدة من أجمل مناظر الشمال."], "en": ["You are now facing Mount Aja, which gave Hail its name and its identity.", "Aja and Mount Salma are known as the two mountains of Tayy, and Arab poets have mentioned them in verse since ancient times.", "They are tied to the Tayy tribe, home of Hatim al-Tai, the Arab symbol of generosity.", "Old tales speak of a love story between Aja and Salma, and from it the two mountains took their names.", "Today its peaks and trails welcome hikers and photographers with a view of one of the finest landscapes in the north."], "fr": ["Vous voici devant le mont Aja, qui a donné à Hail son nom et son identité.", "Aja et le mont Salma sont connus comme les deux montagnes de Tayy, et les poètes arabes les ont mentionnées dans leurs vers depuis l'Antiquité.", "Ces deux montagnes sont liées à la tribu de Tayy, dont est issu Hatim al-Tai, symbole arabe de la générosité.", "D'anciens récits racontent une histoire d'amour entre Aja et Salma, d'où viennent les noms des deux montagnes.", "Aujourd'hui, ses sommets et ses sentiers accueillent les amateurs de randonnée et de photographie, leur offrant l'un des plus beaux panoramas du nord."], "ur": ["اب آپ جبلِ اجا کے سامنے کھڑے ہیں، جس کے نام سے حائل کو اپنا نام اور پہچان ملی۔", "اجا اور جبلِ سلمیٰ کو مل کر طیء کے دو پہاڑ کہا جاتا ہے، اور عرب شاعروں نے قدیم زمانے سے اپنی شاعری میں ان کا ذکر کیا ہے۔", "یہ دونوں پہاڑ قبیلہ طیء سے جڑے ہیں، جس سے تعلق رکھنے والے حاتم طائی عربوں کے ہاں سخاوت کی علامت ہیں۔", "پرانی روایات اجا اور سلمیٰ کے درمیان ایک محبت کی کہانی سناتی ہیں، جہاں سے دونوں پہاڑوں کے نام آئے۔", "آج اس کی چوٹیاں اور راستے واکنگ اور فوٹوگرافی کے شائقین کا استقبال کرتے ہیں، اور انہیں شمال کے خوبصورت ترین مناظر میں سے ایک دکھاتے ہیں۔"], "hi": ["अब आप जबल अजा के सामने खड़े हैं, जिसने हाइल को उसका नाम और पहचान दी।", "अजा और जबल सलमा को मिलाकर तय्य के दो पहाड़ कहा जाता है, और अरब कवियों ने प्राचीन काल से अपनी कविताओं में इनका उल्लेख किया है।", "ये दोनों पहाड़ तय्य क़बीले से जुड़े हैं, जिससे हातिम ताई का संबंध था, जो अरबों के बीच उदारता का प्रतीक माने जाते हैं।", "पुरानी कहानियाँ अजा और सलमा के बीच एक प्रेम कहानी सुनाती हैं, जहाँ से दोनों पहाड़ों के नाम आए।", "आज इसकी चोटियाँ और रास्ते पैदल यात्रियों और फ़ोटोग्राफ़ी के शौकीनों का स्वागत करते हैं, और उन्हें उत्तर के सबसे खूबसूरत नज़ारों में से एक दिखाते हैं।"], "zh": ["您现在面对的是阿贾山，哈伊勒的名字和身份正是源自于此。", "阿贾山与萨勒玛山合称为泰伊双山，自古以来阿拉伯诗人就在诗中提到过它们。", "这两座山与泰伊部落有关，慷慨的阿拉伯象征人物哈提姆·塔伊正是出自这个部落。", "古老的传说讲述了阿贾与萨勒玛之间的爱情故事，两座山的名字也由此而来。", "如今，这里的山峰与小径迎接着徒步和摄影爱好者，为他们呈现北部最美的风景之一。"]},
+  },
+  { id:"jubbah", cat:'heritage', scene:"rock", lat:28.0106, lng:40.9131,
+    name:{"ar": "جبة والنقوش الصخرية", "en": "Jubbah Rock Art", "fr": "Art rupestre de Jubbah", "ur": "جبہ اور چٹانی نقوش", "hi": "जुब्बा शैल कला", "zh": "杰巴岩画"},
+    sub:{"ar": "متحف مفتوح لتاريخ الإنسانية", "en": "An open-air museum of human history", "fr": "Un musée à ciel ouvert de l'histoire humaine", "ur": "انسانی تاریخ کا کھلا عجائب گھر", "hi": "मानव इतिहास का खुला संग्रहालय", "zh": "人类历史的露天博物馆"},
+    fact:{"ar": "مسجل بيونسكو منذ 2015", "en": "UNESCO listed since 2015", "fr": "Inscrit à l'UNESCO depuis 2015", "ur": "2015 سے یونیسکو کی فہرست میں", "hi": "2015 से यूनेस्को सूचीबद्ध", "zh": "自2015年列入联合国教科文组织名录"},
+    text:{"ar": ["هنا في جبة، على بعد نحو تسعين كيلومتراً شمال غرب حائل، تقف أمام واحد من أقدم سجلات الإنسان على وجه الأرض.", "على جبل أم سنمان نقش الناس قبل آلاف السنين صور البشر والحيوانات بأدوات حجرية بسيطة.", "وكانت بالقرب من هذه الصخور بحيرة ماء عذب اختفت منذ زمن بعيد.", "وقد سُجل الفن الصخري في منطقة حائل ضمن قائمة اليونسكو للتراث العالمي عام ألفين وخمسة عشر.", "اقترب من الصخرة بهدوء وتأمل الخطوط، فهي رسائل تركها أناس عاشوا هنا قبل أن تُكتب الحروف.", "كل نقش هنا بصمة إنسان قديم، وأنت الآن تسمع حكايتها."], "en": ["Here in Jubbah, about ninety kilometres northwest of Hail, you stand before one of the oldest records of humankind.", "On Jabal Umm Sinman, people carved human and animal figures into the rock with simple stone tools thousands of years ago.", "Close to these rocks lay a freshwater lake that vanished long ago.", "The rock art of the Hail region has been on UNESCO's World Heritage List since 2015.", "Step closer quietly and study the lines, because they are messages left by people who lived here before letters were written.", "Every carving here is the fingerprint of an ancient person, and you are now hearing its story."], "fr": ["Ici, à Jubbah, à environ quatre-vingt-dix kilomètres au nord-ouest de Hail, vous vous trouvez devant l'un des plus anciens témoignages de l'humanité.", "Sur le mont Umm Sinman, des hommes ont gravé, il y a des milliers d'années, des figures humaines et animales avec de simples outils en pierre.", "Près de ces rochers se trouvait autrefois un lac d'eau douce, disparu depuis longtemps.", "L'art rupestre de la région de Hail est inscrit sur la liste du patrimoine mondial de l'UNESCO depuis 2015.", "Approchez-vous doucement du rocher et observez les traits, car ce sont des messages laissés par des gens qui vivaient ici avant même l'invention de l'écriture.", "Chaque gravure ici est l'empreinte d'un homme ancien, et vous entendez maintenant son histoire."], "ur": ["یہاں جبہ میں، حائل سے تقریباً نوے کلومیٹر شمال مغرب میں، آپ انسانیت کی قدیم ترین یادگاروں میں سے ایک کے سامنے کھڑے ہیں۔", "جبلِ ام سنمان پر ہزاروں سال پہلے لوگوں نے سادہ پتھر کے اوزاروں سے انسانوں اور جانوروں کی تصویریں کندہ کیں۔", "ان چٹانوں کے قریب کبھی میٹھے پانی کی ایک جھیل ہوا کرتی تھی جو مدتوں پہلے غائب ہو گئی۔", "حائل کے علاقے کے چٹانی فن کو 2015 سے یونیسکو کی عالمی ثقافتی ورثے کی فہرست میں شامل کیا گیا ہے۔", "چٹان کے قریب آہستگی سے جائیں اور ان لکیروں پر غور کریں، کیونکہ یہ ان لوگوں کے پیغامات ہیں جو یہاں حروف لکھے جانے سے پہلے بستے تھے۔", "یہاں کی ہر نقاشی ایک قدیم انسان کی نشانی ہے، اور اب آپ اس کی کہانی سن رہے ہیں۔"], "hi": ["यहाँ जुब्बा में, हाइल से लगभग नब्बे किलोमीटर उत्तर-पश्चिम में, आप मानवता के सबसे पुराने अभिलेखों में से एक के सामने खड़े हैं।", "जबल उम्म सिनमान पर हज़ारों साल पहले लोगों ने साधारण पत्थर के औज़ारों से इंसानों और जानवरों की तस्वीरें उकेरीं।", "इन चट्टानों के पास कभी मीठे पानी की एक झील हुआ करती थी जो बहुत समय पहले लुप्त हो गई।", "हाइल क्षेत्र की शैल कला 2015 से यूनेस्को की विश्व धरोहर सूची में शामिल है।", "चट्टान के पास धीरे से जाएँ और इन रेखाओं को ध्यान से देखें, क्योंकि ये उन लोगों के संदेश हैं जो यहाँ लिपि के आविष्कार से पहले रहते थे।", "यहाँ की हर नक़्क़ाशी एक प्राचीन इंसान की निशानी है, और अब आप उसकी कहानी सुन रहे हैं।"], "zh": ["在这里，杰巴，位于哈伊勒西北约九十公里处，您正站在人类最古老的记录之一面前。", "在乌姆辛曼山上，数千年前的人们用简单的石器在岩石上刻下了人类和动物的图案。", "这些岩石附近曾经有一片淡水湖，早已消失不见。", "哈伊勒地区的岩石艺术自2015年起被列入联合国教科文组织世界遗产名录。", "请轻轻靠近岩石，细细端详这些线条，它们是文字发明之前生活在这里的人们留下的信息。", "这里的每一处雕刻都是古人的印记，此刻您正在聆听它的故事。"]},
+  },
+];
+const CATS = {
+  heritage: { color:"#6C3AA6", icon:"fort", label:{"ar": "التراث والتاريخ", "en": "Heritage & History", "fr": "Patrimoine et histoire", "ur": "ثقافتی ورثہ اور تاریخ", "hi": "विरासत और इतिहास", "zh": "遗产与历史"} },
+  restaurants: { color:"#E8583A", icon:"food", label:{"ar": "مطاعم", "en": "Restaurants", "fr": "Restaurants", "ur": "ریستوران", "hi": "रेस्तराँ", "zh": "餐厅"} },
+  cafes: { color:"#6B2E1E", icon:"coffee", label:{"ar": "كوفيهات", "en": "Cafés", "fr": "Cafés", "ur": "کیفے", "hi": "कैफ़े", "zh": "咖啡馆"} },
+  parks: { color:"#2F8F62", icon:"tree", label:{"ar": "حدائق", "en": "Parks", "fr": "Parcs", "ur": "پارکس", "hi": "पार्क", "zh": "公园"} },
+  activities: { color:"#1B8E9A", icon:"tent", label:{"ar": "أنشطة وتخييم ومحميات", "en": "Activities, Camping & Reserves", "fr": "Activités, camping et réserves", "ur": "سرگرمیاں، کیمپنگ اور محفوظ علاقے", "hi": "गतिविधियाँ, कैंपिंग और संरक्षित क्षेत्र", "zh": "活动、露营与保护区"} },
+  entertainment: { color:"#1F7ACF", icon:"wheel", label:{"ar": "ترفيه", "en": "Entertainment", "fr": "Divertissement", "ur": "تفریح", "hi": "मनोरंजन", "zh": "娱乐"} },
+  nature: { color:"#8B5E34", icon:"mount", label:{"ar": "طبيعة وجبال", "en": "Nature & Mountains", "fr": "Nature et montagnes", "ur": "فطرت اور پہاڑ", "hi": "प्रकृति और पहाड़", "zh": "自然与山脉"} },
+};
+
+const EXPLORE_ITEMS = [
+  { id:'x1', cat:"restaurants", scene:"food", name:"لوفت (LOFT)" },
+  { id:'x2', cat:"restaurants", scene:"food", name:"فلوكس" },
+  { id:'x3', cat:"restaurants", scene:"food", name:"مطعم بهارات" },
+  { id:'x4', cat:"restaurants", scene:"food", name:"مطعم ديرتنا" },
+  { id:'x5', cat:"restaurants", scene:"food", name:"مطعم الوادي المبارك" },
+  { id:'x6', cat:"restaurants", scene:"food", name:"مطعم فيولا" },
+  { id:'x7', cat:"restaurants", scene:"food", name:"مطعم مرساي" },
+  { id:'x8', cat:"restaurants", scene:"food", name:"مطعم بيكول" },
+  { id:'x9', cat:"restaurants", scene:"food", name:"مطعم السدة" },
+  { id:'x10', cat:"restaurants", scene:"food", name:"مطعم روقو روكو" },
+  { id:'x11', cat:"restaurants", scene:"food", name:"بوينت برقر" },
+  { id:'x12', cat:"restaurants", scene:"food", name:"ببلز بيتزا" },
+  { id:'x13', cat:"cafes", scene:"coffee", name:"جيشا" },
+  { id:'x14', cat:"cafes", scene:"coffee", name:"بيكوك" },
+  { id:'x15', cat:"cafes", scene:"coffee", name:"خطوة جمل" },
+  { id:'x16', cat:"cafes", scene:"coffee", name:"ايت اوز" },
+  { id:'x17', cat:"cafes", scene:"coffee", name:"محمصة وكوفي غيهب" },
+  { id:'x18', cat:"cafes", scene:"coffee", name:"ستاربكس" },
+  { id:'x19', cat:"cafes", scene:"coffee", name:"بنشاي" },
+  { id:'x20', cat:"cafes", scene:"coffee", name:"مو كافيه" },
+  { id:'x21', cat:"cafes", scene:"coffee", name:"IV كافيه" },
+  { id:'x22', cat:"cafes", scene:"coffee", name:"التون" },
+  { id:'x23', cat:"cafes", scene:"coffee", name:"فيرا" },
+  { id:'x24', cat:"cafes", scene:"coffee", name:"بانق" },
+  { id:'x25', cat:"cafes", scene:"coffee", name:"ساوث" },
+  { id:'x26', cat:"cafes", scene:"coffee", name:"البا" },
+  { id:'x27', cat:"cafes", scene:"coffee", name:"رواية" },
+  { id:'x28', cat:"parks", scene:"oasis", name:"منتزه الأمير سعود بن عبدالمحسن" },
+  { id:'x29', cat:"parks", scene:"oasis", name:"حديقة الأمير عبدالعزيز بن سعد" },
+  { id:'x30', cat:"parks", scene:"oasis", name:"متنزه مشار" },
+  { id:'x31', cat:"parks", scene:"oasis", name:"منتزه السمراء" },
+  { id:'x32', cat:"parks", scene:"oasis", name:"حديقة البساتين" },
+  { id:'x33', cat:"parks", scene:"oasis", name:"حديقة السلام" },
+  { id:'x34', cat:"parks", scene:"oasis", name:"منتزه المغواة" },
+  { id:'x35', cat:"activities", scene:"camp", name:"محمية توارن" },
+  { id:'x36', cat:"activities", scene:"camp", name:"محمية الديحان" },
+  { id:'x37', cat:"activities", scene:"camp", name:"محمية القحويان" },
+  { id:'x38', cat:"activities", scene:"camp", name:"رملة" },
+  { id:'x39', cat:"entertainment", scene:"wheel", name:"حديقة الفراولة" },
+  { id:'x40', cat:"entertainment", scene:"wheel", name:"الأدهم" },
+  { id:'x41', cat:"entertainment", scene:"wheel", name:"حير السرور" },
+  { id:'x42', cat:"entertainment", scene:"wheel", name:"منتجع نحلة ونخلة" },
+  { id:'x43', cat:"entertainment", scene:"wheel", name:"منتجع الحياة" },
+  { id:'x44', cat:"entertainment", scene:"wheel", name:"نادي العزيزية للطيران" },
+  { id:'x45', cat:"nature", scene:"peaks", name:"جبال أجا وسلمى" },
+  { id:'x46', cat:"nature", scene:"peaks", name:"توارن" },
+  { id:'x47', cat:"nature", scene:"peaks", name:"السلف" },
+  { id:'x48', cat:"nature", scene:"peaks", name:"الرعيلة" },
+  { id:'x49', cat:"nature", scene:"peaks", name:"جو" },
+  { id:'x50', cat:"nature", scene:"peaks", name:"نفود جبة" },
+  { id:'x51', cat:"nature", scene:"peaks", name:"الخطة" },
+  { id:'x52', cat:"nature", scene:"peaks", name:"القاعد" },
+];
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+function ic(n,c){return '<svg class="ic '+(c||'')+'"><use href="#i-'+n+'"/></svg>';}
+var LANGS={ar:{dir:'rtl',speech:'ar-SA',name:'العربية'},en:{dir:'ltr',speech:'en-US',name:'English'},fr:{dir:'ltr',speech:'fr-FR',name:'Français'},ur:{dir:'rtl',speech:'ur-PK',name:'اردو'},hi:{dir:'ltr',speech:'hi-IN',name:'हिन्दी'},zh:{dir:'ltr',speech:'zh-CN',name:'中文'}};
+var CPS={ar:12.2,en:14.5,fr:15,ur:11,hi:10.5,zh:4.5};
+var NUMS={ar:'٠١٢٣٤٥٦٧٨٩'};
+
+/* ---------- state ---------- */
+var S={ui:'ar',tab:'home',filter:'all',q:'',heard:{},
+  geo:{status:'idle',lat:null,lng:null,acc:null,watchId:null,buf:[]}};
+try{var h0=localStorage.getItem('basmat-heard');if(h0)S.heard=JSON.parse(h0)||{};}catch(e){}
+function saveHeard(){try{localStorage.setItem('basmat-heard',JSON.stringify(S.heard));}catch(e){}}
+try{var u0=localStorage.getItem('basmat-ui');if(u0&&LANGS[u0])S.ui=u0;}catch(e){}
+function saveUI(){try{localStorage.setItem('basmat-ui',S.ui);}catch(e){}}
+
+function t(key){var e=UI2[key];if(!e)return key;return e[S.ui]||e.ar||'';}
+function tc(arr,i){return (arr&&arr[i])?(arr[i][S.ui]||arr[i].ar||''):'';}
+function nf(n){n=String(n);return S.ui==='ar'?n.replace(/\d/g,function(d){return NUMS.ar[d];}):n;}
+function dsep(){return S.ui==='ar'?'٫':'.';}
+
+/* ---------- data accessors ---------- */
+function pn(p){return p.name[S.ui]||p.name.ar;}
+function psub(p){return p.sub[S.ui]||p.sub.ar;}
+function pfact(p){return p.fact[S.ui]||p.fact.ar;}
+function byId(id){return PLACES.filter(function(p){return p.id===id;})[0];}
+function exById(id){return EXPLORE_ITEMS.filter(function(x){return x.id===id;})[0];}
+var STORY=PLACES; // all real places have narrated stories
+
+/* ---------- geolocation (real, accuracy-weighted) ---------- */
+var TRIGGER_RADIUS_M=150, MAX_USABLE_ACCURACY_M=500, POS_BUFFER_MAX=6;
+function toRad(d){return d*Math.PI/180;}
+function toDeg(r){return r*180/Math.PI;}
+function haversine(lat1,lng1,lat2,lng2){
+  var R=6371000,dLat=toRad(lat2-lat1),dLng=toRad(lng2-lng1);
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function bearingTo(lat1,lng1,lat2,lng2){
+  var y=Math.sin(toRad(lng2-lng1))*Math.cos(toRad(lat2));
+  var x=Math.cos(toRad(lat1))*Math.sin(toRad(lat2))-Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(toRad(lng2-lng1));
+  return (toDeg(Math.atan2(y,x))+360)%360;
+}
+function smoothedFix(lat,lng,acc){
+  if(acc>MAX_USABLE_ACCURACY_M&&S.geo.buf.length)return; // ignore very poor fixes if we already have something
+  S.geo.buf.push({lat:lat,lng:lng,acc:Math.max(5,acc)});
+  if(S.geo.buf.length>POS_BUFFER_MAX)S.geo.buf.shift();
+  var wsum=0,lat2=0,lng2=0;
+  S.geo.buf.forEach(function(f){var w=1/(f.acc*f.acc);wsum+=w;lat2+=f.lat*w;lng2+=f.lng*w;});
+  S.geo.lat=lat2/wsum;S.geo.lng=lng2/wsum;S.geo.acc=acc;
+}
+function onPosition(pos){
+  smoothedFix(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy||50);
+  S.geo.status='active';
+  checkGeofence();
+  if(S.tab==='map')renderTab('map');
+  if(S.tab==='home')renderTab('home');
+  refreshHeaderGps();
+}
+function onGeoError(err){
+  if(S.geo.status!=='active'){S.geo.status='error';S.geo.errCode=err&&err.code;}
+  refreshHeaderGps();
+  if(S.tab==='map')renderTab('map');
+}
+function startGeo(){
+  if(!('geolocation' in navigator)){S.geo.status='nogeo';if(S.tab==='map')renderTab('map');return;}
+  S.geo.status='activating';refreshHeaderGps();if(S.tab==='map')renderTab('map');
+  navigator.geolocation.getCurrentPosition(onPosition,onGeoError,{enableHighAccuracy:true,maximumAge:0,timeout:12000});
+  if(S.geo.watchId==null){
+    S.geo.watchId=navigator.geolocation.watchPosition(onPosition,onGeoError,{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+  }
+}
+function refreshHeaderGps(){
+  var g=$('#gpsdot');if(!g)return;
+  g.classList.toggle('off',S.geo.status!=='active');
+}
+var geoTrig={};
+function checkGeofence(){
+  if(S.geo.lat==null)return;
+  STORY.forEach(function(p){
+    var d=haversine(S.geo.lat,S.geo.lng,p.lat,p.lng);
+    var radius=TRIGGER_RADIUS_M+Math.min(S.geo.acc||50,100);
+    if(d<radius&&!geoTrig[p.id]){
+      geoTrig[p.id]=1;
+      showNotif(p);
+    }
+    if(d>radius*2.2)geoTrig[p.id]=0; // allow re-trigger after leaving
+  });
+}
+function meters(p){if(S.geo.lat==null)return null;return haversine(S.geo.lat,S.geo.lng,p.lat,p.lng);}
+function distTxt(p){
+  var m=meters(p);
+  if(m==null)return t('distEnableLocation');
+  if(m<1000)return nf(Math.max(10,Math.round(m/10)*10))+(S.ui==='ar'?' م':' m');
+  return nf((m/1000).toFixed(1).replace('.',dsep()))+(S.ui==='ar'?' كم':' km');
+}
+function fmt(s){s=Math.max(0,Math.round(s));return nf(Math.floor(s/60))+':'+nf(String(s%60).padStart(2,'0'));}
+function toast(txt){var e=$('#toast');e.textContent=txt;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){e.classList.remove('on');},2600);}
+
+/* ---------- scenes (procedural SVG illustrations) ---------- */
+var UID=0;
+function rng(seed){var s=seed%2147483647;if(s<=0)s+=2147483646;return function(){s=s*16807%2147483647;return (s-1)/2147483646;};}
+function ridge(seed,w,h,base,amp,n,color,op){
+  var r=rng(seed),d='M0,'+h+' L0,'+(base-amp*r()).toFixed(1);
+  for(var i=1;i<=n;i++){d+=' L'+(w*i/n).toFixed(1)+','+(base-amp*(0.2+0.8*r())).toFixed(1);}
+  return '<path d="'+d+' L'+w+','+h+' Z" fill="'+color+'" opacity="'+(op||1)+'"/>';
+}
+function palm(x,y,s,c){
+  var o='<g transform="translate('+x+','+y+') scale('+s+')" fill="none" stroke="'+c+'" stroke-linecap="round">';
+  o+='<path d="M0 0 C2 -14 1 -26 4 -38" stroke-width="3"/>';
+  [[-22,-6],[-16,-18],[-3,-24],[20,-8],[15,-20],[26,-10]].forEach(function(l){o+='<path d="M4 -38 q'+(l[0]/2)+' '+(l[1]-6)+' '+l[0]+' '+(l[1]+18)+'" stroke-width="2.4"/>';});
+  return o+'</g>';
+}
+function fortG(x,y,s){
+  var o='<g transform="translate('+x+','+y+') scale('+s+')">';
+  o+='<rect x="0" y="0" width="104" height="46" fill="#9C4128"/><rect x="60" y="0" width="44" height="46" fill="#7A2F1C"/>';
+  [[-8,-22,22,68],[40,-30,24,76],[86,-18,22,64]].forEach(function(tt){
+    o+='<rect x="'+tt[0]+'" y="'+tt[1]+'" width="'+tt[2]+'" height="'+tt[3]+'" fill="#B24F30"/><rect x="'+(tt[0]+tt[2]*.55)+'" y="'+tt[1]+'" width="'+(tt[2]*.45)+'" height="'+tt[3]+'" fill="#8A3722"/>';
+    for(var k=0;k<3;k++)o+='<rect x="'+(tt[0]+1+k*(tt[2]/3))+'" y="'+(tt[1]-6)+'" width="'+(tt[2]/5)+'" height="7" fill="#B24F30"/>';
+    o+='<rect x="'+(tt[0]+tt[2]/2-2)+'" y="'+(tt[1]+14)+'" width="4" height="10" rx="2" fill="#3B140C"/>';
+  });
+  for(var i=0;i<6;i++)o+='<rect x="'+(16+i*14)+'" y="-5" width="7" height="6" fill="#9C4128"/>';
+  o+='<path d="M44 46v-14a8 8 0 0 1 16 0v14z" fill="#3B140C"/>';
+  return o+'</g>';
+}
+function towerG(x,y,s){
+  var o='<g transform="translate('+x+','+y+') scale('+s+')">';
+  o+='<rect x="0" y="52" width="210" height="34" fill="#C9875A"/><rect x="0" y="70" width="210" height="16" fill="#A8683F"/>';
+  [[14,6,44,80],[84,-18,50,104],[158,0,44,86]].forEach(function(tt){
+    o+='<path d="M'+tt[0]+' '+(tt[1]+tt[3])+' L'+(tt[0]+4)+' '+tt[1]+' H'+(tt[0]+tt[2]-4)+' L'+(tt[0]+tt[2])+' '+(tt[1]+tt[3])+'Z" fill="#DDA36F"/>';
+    o+='<path d="M'+(tt[0]+tt[2]*.55)+' '+tt[1]+' H'+(tt[0]+tt[2]-4)+' L'+(tt[0]+tt[2])+' '+(tt[1]+tt[3])+' H'+(tt[0]+tt[2]*.55)+'Z" fill="#B87B4E"/>';
+    for(var k=0;k<5;k++)o+='<rect x="'+(tt[0]+2+k*(tt[2]-6)/5)+'" y="'+(tt[1]-7)+'" width="'+((tt[2]-6)/9)+'" height="8" fill="#DDA36F"/>';
+    for(var w=0;w<3;w++)o+='<rect x="'+(tt[0]+tt[2]/2-3)+'" y="'+(tt[1]+16+w*22)+'" width="6" height="11" rx="3" fill="#4B1E12"/>';
+  });
+  o+='<path d="M96 86V70a9 9 0 0 1 18 0v16z" fill="#3B140C"/>';
+  return o+'</g>';
+}
+function palaceG(x,y,s){
+  var o='<g transform="translate('+x+','+y+') scale('+s+')">';
+  o+='<rect x="0" y="0" width="190" height="56" fill="#E9C79B"/><rect x="0" y="40" width="190" height="16" fill="#D3A878"/>';
+  [[-10,-26],[170,-26]].forEach(function(tt){
+    o+='<rect x="'+tt[0]+'" y="'+tt[1]+'" width="30" height="82" fill="#F1D3A8"/><rect x="'+(tt[0]+17)+'" y="'+tt[1]+'" width="13" height="82" fill="#D9AE7E"/>';
+    for(var k=0;k<4;k++)o+='<rect x="'+(tt[0]+1+k*7.6)+'" y="'+(tt[1]-6)+'" width="5" height="7" fill="#F1D3A8"/>';
+    o+='<path d="M'+(tt[0]+10)+' '+(tt[1]+30)+'v10a5 5 0 0 0 10 0v-10a5 5 0 0 0-10 0z" fill="#5B2416"/>';
+  });
+  for(var i=0;i<9;i++)o+='<rect x="'+(24+i*17)+'" y="-5" width="9" height="7" fill="#E9C79B"/>';
+  for(var j=0;j<4;j++)o+='<path d="M'+(30+j*32)+' 34v-14a6 6 0 0 1 12 0v14z" fill="#5B2416" opacity=".85"/>';
+  o+='<path d="M83 56V32a12 12 0 0 1 24 0v24z" fill="#3B140C"/><path d="M79 56V30a16 16 0 0 1 32 0v26" fill="none" stroke="#B4794F" stroke-width="3"/>';
+  return o+'</g>';
+}
+function rockG(x,y,s){
+  var o='<g transform="translate('+x+','+y+') scale('+s+')">';
+  o+='<path d="M0 90 C-4 40 24 6 80 2 C140 -3 178 30 176 90z" fill="#A9552F"/><path d="M80 2 C140 -3 178 30 176 90 L100 90 C112 50 100 20 80 2z" fill="#8A3F22"/>';
+  o+='<g fill="none" stroke="#3B140C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".9">';
+  o+='<path d="M22 66q4-14 18-14 6 0 12 4l8-8-2 10q6 4 6 10M27 66v14M35 66v14M52 60v20M58 60v20M40 52q-6-12-2-18M42 52q0-14 6-20"/>';
+  o+='<circle cx="112" cy="40" r="7"/><circle cx="112" cy="40" r="2"/>';
+  o+='<path d="M132 74l3-14 4 0 3 14M137 60v-8M133 50a4 4 0 1 0 8 0 4 4 0 1 0-8 0M126 58l11 3 11-3"/>';
+  o+='<path d="M80 32l4 12M88 30l3 14M96 32l2 12"/>';
+  return o+'</g></g>';
+}
+function tentG(x,y,s){
+  return '<g transform="translate('+x+','+y+') scale('+s+')"><path d="M0 60 40 0l40 60z" fill="#F3D6B0"/><path d="M40 0 80 60H44z" fill="#DDB283"/><path d="M40 60 28 60 40 24 52 60z" fill="#3B140C"/><path d="M40 0v-10" stroke="#3B140C" stroke-width="2"/></g>';
+}
+var SK={
+  fort:['#FCD9AE','#F0A37B','#FFF0CC','#EEC7A5','#CF7C55','#8E3B26'],
+  palace:['#FDE7BE','#F0A06F','#FFF3D2','#F0CDAB','#D98A5E','#96422A'],
+  barzan:['#F7C99A','#E38A63','#FFEBC4','#EDBFA0','#C9714B','#7E301D'],
+  peaks:['#7DB6C6','#F5B98F','#FFF0D0','#EBC2A3','#CC7A54','#7F3421'],
+  oasis:['#8FC7CF','#F6D9A8','#FFF3D2','#D7B597','#B9744C','#5D2A1B'],
+  rock:['#F7E8D3','#EDBE95','#FFF3D8','#EFCFB0','#CB8258','#8B3E24'],
+  coffee:['#8E3A26','#E1875C','#FFE7C7','#B4573B','#8E3A26','#5D2216'],
+  food:['#F07D55','#F8B27E','#FFE7C7','#E9764E','#C75434','#7D2A19'],
+  camp:['#173A55','#5E7F94','#FFE9BF','#33566B','#1D3F56','#0F2739'],
+  wheel:['#5F9FD6','#F2C9A0','#FFF0D0','#7DAEDB','#3F7FBB','#20507F']
+};
+function scene(kind,opt){
+  opt=opt||{};var w=360,h=opt.h||240,id='g'+(++UID),c=SK[kind]||SK.fort,seed=kind.length*131+kind.charCodeAt(0);
+  var o='<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+  o+='<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c[0]+'"/><stop offset="1" stop-color="'+c[1]+'"/></linearGradient>';
+  o+='<radialGradient id="'+id+'s"><stop offset="0" stop-color="'+c[2]+'"/><stop offset="1" stop-color="'+c[2]+'" stop-opacity="0"/></radialGradient></defs>';
+  o+='<rect width="'+w+'" height="'+h+'" fill="url(#'+id+')"/>';
+  if(kind==='camp'){var r=rng(7);for(var i=0;i<40;i++)o+='<circle cx="'+(r()*w).toFixed(0)+'" cy="'+(r()*h*0.5).toFixed(0)+'" r="'+(0.5+r()*1.1).toFixed(1)+'" fill="#fff" opacity="'+(0.4+r()*0.5).toFixed(2)+'"/>';}
+  var sx=(kind==='peaks'||kind==='oasis')?250:96;
+  o+='<circle cx="'+sx+'" cy="'+(h*0.36)+'" r="70" fill="url(#'+id+'s)"/><circle cx="'+sx+'" cy="'+(h*0.36)+'" r="20" fill="'+c[2]+'"/>';
+  var far=h*0.66,mid=h*0.76,near=h*0.9;
+  if(kind==='peaks'){
+    o+=ridge(seed,w,h,far,60,14,c[3],.85);
+    o+='<path d="M20 '+h+' L110 44 L150 96 L205 30 L300 '+h+' Z" fill="'+c[4]+'"/><path d="M110 44 L150 96 L128 '+h+' L60 '+h+' Z" fill="#B76340" opacity=".75"/><path d="M205 30 L260 '+h+' L300 '+h+' Z" fill="#A9532F" opacity=".8"/>';
+    o+=ridge(seed+3,w,h,mid+24,34,20,c[5],1);
+    o+=palm(40,h-6,.9,'#3B140C')+palm(322,h-4,1.1,'#3B140C');
+  }else if(kind==='oasis'){
+    o+=ridge(seed,w,h,far-6,58,14,c[3],.9)+ridge(seed+2,w,h,mid-4,34,16,c[4],.95);
+    o+='<ellipse cx="190" cy="'+(h-58)+'" rx="86" ry="14" fill="#8CC8D2"/><ellipse cx="190" cy="'+(h-60)+'" rx="70" ry="8" fill="#B7E0E6" opacity=".8"/>';
+    o+=ridge(seed+9,w,h,near+2,16,22,c[5],1);
+    [[40,h-24,1.3],[86,h-30,1.1],[124,h-22,1.2],[262,h-28,1.2],[304,h-22,1.4],[336,h-32,1],[158,h-36,.8],[226,h-38,.85]].forEach(function(p){o+=palm(p[0],p[1],p[2],'#2F6A44');});
+  }else if(kind==='rock'){
+    o+=ridge(seed,w,h,far,40,12,c[3],.9)+ridge(seed+5,w,h,mid,26,18,c[4],.9);
+    o+=rockG(70,h-136,1.35);
+    o+=ridge(seed+8,w,h,near+8,18,22,c[5],1);
+  }else if(kind==='fort'){
+    o+=ridge(seed,w,h,far,52,13,c[3],.85)+ridge(seed+2,w,h,mid,34,15,c[4],1);
+    o+='<path d="M150 '+h+' C168 150 200 128 250 128 C296 128 320 150 340 '+h+' Z" fill="#B25B37"/>';
+    o+=fortG(196,104,.86);o+=ridge(seed+9,w,h,near+6,20,20,c[5],1)+palm(50,h-6,1,'#3B140C')+palm(84,h-2,.8,'#3B140C');
+  }else if(kind==='barzan'){
+    o+=ridge(seed,w,h,far,40,12,c[3],.85)+ridge(seed+2,w,h,mid,22,15,c[4],.95);
+    o+='<rect x="0" y="'+(h-44)+'" width="'+w+'" height="44" fill="#D99668"/>'+towerG(74,h-138,1.25);
+    o+=palm(40,h-28,1.1,'#4A1C10')+palm(330,h-26,1.2,'#4A1C10');
+    o+=ridge(seed+8,w,h,h-6,10,24,c[5],1);
+  }else if(kind==='palace'){
+    o+=ridge(seed,w,h,far,36,12,c[3],.8)+ridge(seed+2,w,h,mid,20,15,c[4],.9);
+    o+='<rect x="0" y="'+(h-46)+'" width="'+w+'" height="46" fill="#D89467"/>'+palaceG(84,h-108,1.1);
+    o+=palm(48,h-30,1.1,'#4A1C10')+palm(320,h-26,1.2,'#4A1C10')+palm(300,h-20,.8,'#4A1C10');
+    o+=ridge(seed+8,w,h,h-6,10,24,c[5],1);
+  }else if(kind==='camp'){
+    o+=ridge(seed,w,h,far,50,12,c[3],1)+ridge(seed+2,w,h,mid,28,16,c[4],1);
+    o+='<circle cx="240" cy="'+(h-44)+'" r="26" fill="#F4A84E" opacity=".35"/>'+tentG(110,h-92,1.3)+tentG(232,h-70,.9);
+    o+='<path d="M244 '+(h-38)+'q-8-14 0-22 8 8 0 22z" fill="#FFC15E"/>'+ridge(seed+8,w,h,near+6,16,22,c[5],1);
+  }else{
+    o+=ridge(seed,w,h,far,40,12,c[3],.6);
+    if(kind==='wheel'){o+='<g transform="translate(180,'+(h*0.5)+')" fill="none" stroke="#fff" stroke-width="3" opacity=".95"><circle r="72"/><circle r="8" fill="#fff"/><path d="M0-72V72M-72 0H72M-51-51 51 51M51-51-51 51"/><path d="M-40 92 0 0 40 92"/></g>';}
+    else{o+='<g transform="translate(180,'+(h*0.52)+') scale(3.4)" stroke="#fff" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95">'+(kind==='coffee'?'<path d="M-11 -6h22v10a8 8 0 0 1-8 8h-6a8 8 0 0 1-8-8z"/><path d="M11 -3h3a4 4 0 0 1 0 8h-3"/><path d="M-5 -14c-2 2 2 3 0 6M3 -14c-2 2 2 3 0 6"/>':'<path d="M-9-14v10a4 4 0 0 0 4 4v14M-1-14v10a4 4 0 0 1-4 4M-13-14v10a4 4 0 0 0 4 4M11 18V-14c-5 3-7 8-7 14 0 3 2 5 7 5"/>')+'</g>';}
+    o+=ridge(seed+3,w,h,near,20,22,c[5],.9);
+  }
+  return o+'</svg>';
+}
+
+/* ---------- fingerprint art ---------- */
+function fpSVG(cls,groups){
+  var per=2,total=STORY.length*per,o='<svg viewBox="-120 -150 240 300" class="'+(cls||'')+'" aria-hidden="true">';
+  for(var j=0;j<total;j++){
+    var g=Math.floor(j/per),on=groups?groups[g]:false;
+    var rx=10+j*(98/total),ry=14+j*(128/total),gapC=(90+j*47)*Math.PI/180,gap=0.55+((j*37)%5)*0.06;
+    var a0=gapC+gap/2,a1=gapC-gap/2+Math.PI*2;
+    var x0=rx*Math.cos(a0),y0=ry*Math.sin(a0),x1=rx*Math.cos(a1),y1=ry*Math.sin(a1);
+    o+='<path class="ridge '+(on?'on':'off')+'" style="stroke-width:2.5" d="M'+x0.toFixed(1)+' '+y0.toFixed(1)+' A'+rx.toFixed(1)+' '+ry.toFixed(1)+' 0 1 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+'"/>';
+  }
+  return o+'<circle r="4.5" style="stroke-width:2.5" class="ridge '+(groups&&groups.some(function(x){return x;})?'on':'off')+'" fill="none"/></svg>';
+}
+function groupsNow(){return STORY.map(function(p){return !!S.heard[p.id];});}
+function heardCount(){return STORY.filter(function(p){return S.heard[p.id];}).length;}
+function totalDur(p,lang){return (p.text[lang]||p.text.ar).reduce(function(a,txt){return a+estDur(txt,lang);},0);}
+function estDur(txt,lang){return Math.max(3.2,txt.length/(CPS[lang]||12));}
+
+/* ---------- categories ---------- */
+function cn(k){return CATS[k].label[S.ui]||CATS[k].label.ar;}
+
+/* ---------- sponsors (placeholder strip, no real names) ---------- */
+var SPONSOR_ICONS=['spark','flag','mount','wheel','tent'];
+function renderSponsors(){
+  var lbl=t('sponsorLabel');
+  var cards=SPONSOR_ICONS.map(function(icn,i){return '<div class="sp-card">'+ic(icn)+'<b>'+lbl+' '+nf(i+1)+'</b></div>';}).join('');
+  return '<div class="sponsors"><div class="sec" style="margin-bottom:0"><h3>'+t('sponsorsTitle')+'</h3></div><div class="strip">'+cards+'</div><div class="note">'+t('sponsorsNote')+'</div></div>';
+}
+
+/* ---------- tabbar ---------- */
+function renderTabbar(){
+  var tabs=[['home','home',t('tabHome')],['map','map',t('tabMap')],['explore','explore',t('tabExplore')],['print','print',t('tabPrint')]];
+  $('#tabs').innerHTML=tabs.map(function(tb){return '<button class="tab '+(S.tab===tb[0]?'on':'')+'" data-act="tab" data-v="'+tb[0]+'">'+ic(tb[1])+tb[2]+'</button>';}).join('');
+}
+function langBtn(){return '<button class="icon-btn" data-act="lang" aria-label="Language">'+ic('globe')+'</button>';}
+function aboutBtn(){return '<button class="icon-btn" data-act="about" aria-label="'+t('aboutTitle')+'">'+ic('info')+'</button>';}
+
+/* ---------- home ---------- */
+function rHome(){
+  var near=STORY.slice().sort(function(a,b){
+    var ma=meters(a),mb=meters(b);
+    if(ma==null&&mb==null)return 0;if(ma==null)return 1;if(mb==null)return -1;return ma-mb;
+  }).slice(0,4);
+  var o='<div class="top"><div class="brand"><img src="icon-512.png" alt=""><div><div class="t1">بصمة أجا</div><div class="t2"><i class="gps '+(S.geo.status==='active'?'':'off')+'" id="gpsdot"></i>'+(S.geo.status==='active'?t('nearYouSub'):'حائل، المملكة العربية السعودية')+'</div></div></div><div class="tb">'+langBtn()+aboutBtn()+'</div></div>';
+  o+='<div class="hero">'+scene('fort',{h:230})+'<div class="shade"></div><div class="in"><h2>'+t('heroTitle')+'</h2><p>'+t('heroSubtitle')+'</p>';
+  if(S.geo.status!=='active')o+='<button class="btn" data-act="enable-geo">'+ic('walk')+t('heroCta')+'</button>';
+  else o+='<button class="btn" data-act="tab" data-v="map">'+ic('map')+t('tabMap')+'</button>';
+  o+='</div></div>';
+  o+='<div class="sec"><h3>'+t('nearYouTitle')+'</h3><small>'+t('nearYouSub')+'</small></div><div class="list">';
+  near.forEach(function(p){o+=row(p);});
+  o+='</div><div class="sec"><h3>'+t('categoriesTitle')+'</h3></div><div class="cats">';
+  Object.keys(CATS).forEach(function(k){var c=CATS[k];o+='<button class="cat" data-act="cat" data-v="'+k+'"><span class="c" style="background:'+c.color+'">'+ic(c.icon)+'</span><b>'+cn(k)+'</b></button>';});
+  o+='</div><div class="sec"><h3>'+t('yourPrintTitle')+'</h3></div><button class="mini-fp" data-act="tab" data-v="print">'+fpSVG('',groupsNow())+'<div><b>'+nf(heardCount())+'/'+nf(STORY.length)+'</b><span>'+t('printMiniSub')+'</span></div></button>';
+  o+=renderSponsors();
+  return o;
+}
+function row(p){
+  var c=CATS[p.cat],done=S.heard[p.id];
+  var btn='<span class="round '+(done?'ok':'')+'">'+ic(done?'check':'play',done?'':'f')+'</span>';
+  return '<button class="row" data-act="open" data-v="'+p.id+'"><span class="th">'+scene(p.scene,{h:120})+'</span><span class="tx"><b>'+pn(p)+'</b><span><span class="pill" style="background:'+c.color+'">'+cn(p.cat)+'</span>'+distTxt(p)+' · '+fmt(totalDur(p,S.ui))+'</span></span>'+btn+'</button>';
+}
+function exRow(x){
+  var c=CATS[x.cat];
+  return '<button class="row" data-act="openex" data-v="'+x.id+'"><span class="th">'+scene(x.scene,{h:120})+'</span><span class="tx"><b>'+x.name+'</b><span><span class="pill" style="background:'+c.color+'">'+cn(x.cat)+'</span></span></span><span class="round off">'+ic('pin')+'</span></button>';
+}
+
+/* ---------- map / radar ---------- */
+function nearestStory(){
+  var withD=STORY.filter(function(p){return meters(p)!=null;});
+  if(!withD.length)return STORY[0];
+  return withD.sort(function(a,b){return meters(a)-meters(b);})[0];
+}
+var RADAR_RINGS=[ {d:1000,label:'1'+(S.ui==='ar'?' كم':' km')}, {d:10000,label:'10'}, {d:100000,label:'100'} ];
+function scaleR(dMeters,maxR){
+  var maxD=100000; // 100km outer edge
+  var f=Math.sqrt(Math.min(1,dMeters/maxD));
+  return 26+f*(maxR-26);
+}
+function rMap(){
+  if(S.geo.status!=='active'){
+    var msg;
+    if(S.geo.status==='error'){
+      msg=S.geo.errCode===1?t('statusErrorDenied'):(S.geo.errCode===3?t('statusErrorTimeout'):(S.geo.errCode===2?t('statusErrorUnavailable'):t('statusError')));
+    }else if(S.geo.status==='nogeo')msg=t('statusNoGeo');
+    else if(S.geo.status==='activating')msg=t('statusActivating');
+    else msg=t('mapNoLocation');
+    var btnLabel=S.geo.status==='error'?t('retryLabel'):t('mapEnableBtn');
+    return '<div class="mnolo">'+ic('map')+'<p>'+msg+'</p><button class="btn" data-act="enable-geo">'+ic('walk')+btnLabel+'</button>'+(S.geo.status==='error'&&S.geo.errCode===1?'<p style="font-size:11.5px;opacity:.85;margin-top:6px">'+t('iframeHint')+'</p>':'')+'</div>';
+  }
+  var R=150,o='<div class="mapwrap"><svg viewBox="-170 -170 340 340" id="radarsvg">';
+  o+='<circle r="150" fill="#EFE2D2"/>';
+  [50,100,150].forEach(function(rr){o+='<circle r="'+rr+'" fill="none" stroke="#D9C2A8" stroke-width="1" stroke-dasharray="3 5"/>';});
+  var ringLabels=['1'+(S.ui==='ar'?'كم':'km'),'10'+(S.ui==='ar'?'كم':'km'),'≥100'+(S.ui==='ar'?'كم':'km')];
+  [50,100,150].forEach(function(rr,i){o+='<text x="4" y="'+(-rr+11)+'" font-size="9" fill="#B49A83" font-family="Readex Pro,Tahoma,sans-serif">'+ringLabels[i]+'</text>';});
+  o+='<line x1="0" y1="-150" x2="0" y2="150" stroke="#E4CDB6" stroke-width="1"/><line x1="-150" y1="0" x2="150" y2="0" stroke="#E4CDB6" stroke-width="1"/>';
+  o+='<text x="0" y="-136" text-anchor="middle" font-size="11" font-weight="700" fill="#8A6B5C" font-family="Readex Pro,Tahoma,sans-serif">N</text>';
+  STORY.forEach(function(p){
+    var d=meters(p),brg=bearingTo(S.geo.lat,S.geo.lng,p.lat,p.lng),rad=toRad(brg);
+    var r=scaleR(d,150),x=r*Math.sin(rad),y=-r*Math.cos(rad);
+    var c=CATS[p.cat],near=d<(TRIGGER_RADIUS_M+Math.min(S.geo.acc||50,100)),done=S.heard[p.id];
+    o+='<g class="pin '+(near?'hit':'')+'" data-act="open" data-v="'+p.id+'" transform="translate('+x.toFixed(1)+','+y.toFixed(1)+')">';
+    o+='<circle class="halo" r="26" stroke="'+c.color+'"/>';
+    o+='<circle r="15" fill="#fff" opacity=".95"/><circle r="12.5" fill="'+c.color+'"/>';
+    o+='<use href="#i-'+c.icon+'" x="-8" y="-8" width="16" height="16" stroke="#fff" fill="none" style="stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"/>';
+    if(done)o+='<circle cx="10" cy="-10" r="6" fill="#2F8F62" stroke="#fff" stroke-width="1.5"/><path d="m7.5 -10 2 2 3-3.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>';
+    o+='<text y="30" text-anchor="middle" font-size="9.5" font-weight="600" fill="#4A2419" stroke="#FBF2EB" stroke-width="3" paint-order="stroke" font-family="Readex Pro,Tahoma,sans-serif">'+pn(p)+'</text></g>';
+  });
+  o+='<g><circle class="me-ring" r="10" fill="#1F84A0" opacity=".35"/><circle r="8.5" fill="#fff"/><circle r="6" fill="#1F84A0"/></g>';
+  o+='</svg>';
+  var np=nearestStory();
+  o+='<div class="mtop"><div class="card"><span class="round" style="width:36px;height:36px;background:#1F84A0;box-shadow:none">'+ic('pin')+'</span><div style="flex:1;min-width:0"><b>'+pn(np)+'</b><span>'+t('mapNearestLabel')+' · '+distTxt(np)+'</span></div></div></div>';
+  o+='</div>';
+  return o;
+}
+
+/* ---------- explore ---------- */
+function rExplore(){
+  var o='<div class="top" style="margin-bottom:10px"><div class="t1" style="font-size:24px">'+t('tabExplore')+'</div><div class="tb">'+langBtn()+aboutBtn()+'</div></div>';
+  o+='<label class="search">'+ic('search')+'<input id="q" type="search" placeholder="'+t('searchPlaceholder')+'" value="'+S.q.replace(/"/g,'')+'"></label>';
+  o+='<div class="chips"><button class="chip '+(S.filter==='all'?'on':'')+'" data-act="filter" data-v="all">'+t('filterAll')+'</button>';
+  Object.keys(CATS).forEach(function(k){o+='<button class="chip '+(S.filter===k?'on':'')+'" data-act="filter" data-v="'+k+'"><i style="background:'+CATS[k].color+'"></i>'+cn(k)+'</button>';});
+  o+='</div><div class="list" id="exlist">'+exList()+'</div>';
+  return o;
+}
+function exList(){
+  var q=S.q.trim().toLowerCase();
+  var placeRows=PLACES.filter(function(p){return (S.filter==='all'||p.cat===S.filter)&&(!q||(pn(p)+' '+psub(p)).toLowerCase().indexOf(q)>-1);}).map(row);
+  var exRows=EXPLORE_ITEMS.filter(function(x){return (S.filter==='all'||x.cat===S.filter)&&(!q||x.name.toLowerCase().indexOf(q)>-1);}).map(exRow);
+  var all=placeRows.concat(exRows);
+  return all.length?all.join(''):'<div class="empty">'+t('emptyResults')+'</div>';
+}
+
+/* ---------- print / fingerprint ---------- */
+function rPrint(){
+  var n=heardCount(),mins=0;STORY.forEach(function(p){if(S.heard[p.id])mins+=totalDur(p,S.ui)/60;});
+  var o='<div class="fp-head"><h2>'+t('printHeadTitle')+'</h2><p>'+(n?t('printHeadSubSome'):t('printHeadSubZero'))+'</p></div>';
+  o+='<div class="fp-art"><div class="glow" style="opacity:'+(n/STORY.length).toFixed(2)+'"></div>'+fpSVG('',groupsNow())+'</div>';
+  o+='<div class="stats"><div class="stat"><b>'+nf(n)+'/'+nf(STORY.length)+'</b><span>'+t('statStoriesHeard')+'</span></div><div class="stat"><b>'+nf(mins.toFixed(1).replace('.',dsep()))+'</b><span>'+t('statMinutes')+'</span></div><div class="stat"><b>'+nf(n+(n===STORY.length&&n>0?1:0))+'</b><span>'+t('statBadges')+'</span></div></div>';
+  o+='<div class="sec"><h3>'+t('hailStoriesTitle')+'</h3><small>'+(n===STORY.length?t('printComplete'):nf(STORY.length-n))+'</small></div><div class="list">'+STORY.map(row).join('')+'</div>';
+  return o;
+}
+
+/* ---------- tab render/switch ---------- */
+function renderTab(tb){
+  var m={home:rHome,map:rMap,explore:rExplore,print:rPrint};
+  var el=$('#p-'+tb);el.innerHTML=m[tb]();
+  var q=$('#q',el);if(q)q.addEventListener('input',function(){S.q=q.value;$('#exlist').innerHTML=exList();});
+}
+function go(tb){
+  S.tab=tb;
+  $$('.pane').forEach(function(p){p.classList.remove('on');});
+  renderTabbar();renderTab(tb);$('#p-'+tb).classList.add('on');
+  $('#view').scrollTop=0;
+}
+
+/* ---------- sheet ---------- */
+function openSheet(id){
+  var p=byId(id),c=CATS[p.cat];
+  var b='<div class="sh-scene">'+scene(p.scene,{h:200})+'<button class="x" data-act="close-sheet" aria-label="'+t('closeLabel')+'">'+ic('down')+'</button></div><div class="sh-body">'+
+   '<span class="pill" style="background:'+c.color+';align-self:flex-start">'+cn(p.cat)+'</span>'+
+   '<div><h2>'+pn(p)+'</h2><div class="tagline">'+psub(p)+'</div></div>'+
+   '<div class="facts"><span>'+pfact(p)+'</span></div>'+
+   '<button class="btn" data-act="play" data-v="'+p.id+'">'+ic('head')+t('listenBtn')+' · '+fmt(totalDur(p,S.ui))+'</button>';
+  b+='<button class="btn soft" data-act="show-map">'+ic('map')+t('showOnMapBtn')+'</button>';
+  b+='</div>';
+  $('#sheet').innerHTML=b;$('#sheet').classList.add('on');$('#sheetbg').classList.add('on');
+}
+function openExSheet(id){
+  var x=exById(id),c=CATS[x.cat];
+  var b='<div class="sh-scene">'+scene(x.scene,{h:200})+'<button class="x" data-act="close-sheet" aria-label="'+t('closeLabel')+'">'+ic('down')+'</button></div><div class="sh-body">'+
+   '<span class="pill" style="background:'+c.color+';align-self:flex-start">'+cn(x.cat)+'</span>'+
+   '<div><h2>'+x.name+'</h2></div>'+
+   '<div class="empty" style="padding:10px;background:var(--sand2);border-radius:14px">'+t('noAudioMsg')+'</div></div>';
+  $('#sheet').innerHTML=b;$('#sheet').classList.add('on');$('#sheetbg').classList.add('on');
+}
+function closeSheet(){$('#sheet').classList.remove('on');$('#sheetbg').classList.remove('on');}
+
+function openAbout(){
+  var o='<div class="about">';
+  o+='<div style="display:flex;align-items:center;gap:12px"><img src="icon-512.png" style="width:56px;height:56px;border-radius:16px" alt=""><h1>'+t('aboutTitle')+'</h1></div>';
+  o+='<p>'+t('projectDesc')+'</p>';
+  o+='<div><h4>'+t('howItWorksTitle')+'</h4><ol><li>'+t('step1')+'</li><li>'+t('step2')+'</li><li>'+t('step3')+'</li><li>'+t('step4')+'</li></ol></div>';
+  o+='<div><h4>'+t('techTitle')+'</h4><div class="chips2">'+UI2.techChips.map(function(c){return '<span>'+(c[S.ui]||c.ar)+'</span>';}).join('')+'</div></div>';
+  o+='<div><h4>'+t('teamTitle')+'</h4><p>'+t('teamNames')+'</p></div>';
+  o+='<button class="btn soft" data-act="close-sheet">'+t('closeLabel')+'</button></div>';
+  $('#sheet').innerHTML=o;$('#sheet').classList.add('on');$('#sheetbg').classList.add('on');
+}
+function openLangSheet(){
+  var o='<div class="about"><h1>'+ (S.ui==='ar'?'اختر اللغة':'Choose language') +'</h1><div>';
+  Object.keys(LANGS).forEach(function(k){
+    o+='<button class="langrow '+(S.ui===k?'on':'')+'" data-act="setlang" data-v="'+k+'"><span>'+LANGS[k].name+'</span>'+(S.ui===k?ic('check'):'')+'</button>';
+  });
+  o+='</div><button class="btn soft" data-act="close-sheet">'+t('closeLabel')+'</button></div>';
+  $('#sheet').innerHTML=o;$('#sheet').classList.add('on');$('#sheetbg').classList.add('on');
+}
+
+/* ---------- player ---------- */
+var P={p:null,idx:0,playing:false,rate:1,tok:0,lineStart:0,durs:[],raf:0,timers:[],voice:null,real:false};
+function loadVoices(){
+  try{
+    var v=window.speechSynthesis.getVoices()||[];
+    var want=LANGS[S.ui].speech.split('-')[0];
+    P.voice=v.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf(want)===0;})[0]||null;
+  }catch(e){}
+}
+try{loadVoices();window.speechSynthesis.addEventListener('voiceschanged',loadVoices);}catch(e){}
+function clearTimers(){P.timers.forEach(clearTimeout);P.timers=[];try{window.speechSynthesis.cancel();}catch(e){}}
+function narrLines(p){
+  return p.text[S.ui]||p.text.ar;
+}
+function openPlayer(id){
+  var p=byId(id);if(!p)return;
+  closeSheet();hideNotif();
+  P.p=p;P.idx=0;P.playing=false;
+  loadVoices();
+  buildPlayer();
+  $('#player').classList.add('on');
+  setTimeout(startPlay,380);
+}
+function buildPlayer(){
+  var p=P.p,c=CATS[p.cat],bars='';
+  var r=rng(11);for(var i=0;i<34;i++){var hh=10+Math.round(Math.abs(Math.sin(i*.55)+r()*.7)*12);bars+='<i class="bar" style="--h:'+hh+'px;--d:'+(-r()*0.9).toFixed(2)+'s"></i>';}
+  var dirCls=LANGS[S.ui].dir==='rtl'?'rtl':'ltr';
+  var prevI=dirCls==='rtl'?'next':'prev',nextI=dirCls==='rtl'?'prev':'next';
+  var o='<div class="pl-scene">'+scene(p.scene,{h:250})+'<button class="x" data-act="close-player" aria-label="'+t('closeLabel')+'">'+ic('down')+'</button><span class="ai-badge">'+ic('spark')+t('aiBadgeLabel')+'</span></div>';
+  o+='<div class="pl-body"><div class="pl-meta"><span class="pill" style="background:'+c.color+'">'+cn(p.cat)+'</span><span class="pill mut">'+distTxt(p)+'</span></div>';
+  o+='<h2>'+pn(p)+'</h2><div class="tagline">'+psub(p)+'</div><div class="wave" aria-hidden="true">'+bars+'</div>';
+  o+='<div class="lines" id="lines">'+linesHTML()+'</div>';
+  o+='<div class="prog"><div class="track"><i id="pfill"></i></div><div class="times"><span id="tcur">'+fmt(0)+'</span><span id="ttot">'+fmt(totalDur(p,S.ui))+'</span></div></div>';
+  o+='<div class="ctl"><button class="cb t" data-act="speed" id="spd">'+nf(P.rate)+'×</button><button class="cb" data-act="prev" aria-label="'+t('prevLabel')+'">'+ic(prevI)+'</button><button class="cb main" id="pp" data-act="toggle" aria-label="'+t('playLabel')+'">'+ic('play')+'</button><button class="cb" data-act="next" aria-label="'+t('nextLabel')+'">'+ic(nextI)+'</button><span class="cb" aria-hidden="true"></span></div>';
+  o+='<div class="hint" id="hint"></div></div>';
+  o+='<div class="done-card" id="done"></div>';
+  $('#player').innerHTML=o;
+}
+function linesHTML(){
+  var dirCls=LANGS[S.ui].dir==='rtl'?'rtl':'ltr';
+  return narrLines(P.p).map(function(txt,i){
+    var words=txt.split(' ').map(function(w){return '<span class="w">'+w+'</span>';}).join(' ');
+    return '<p class="ln '+dirCls+'" data-i="'+i+'">'+words+'</p>';
+  }).join('');
+}
+function speakLine(text,my,fin){
+  var v=P.voice;
+  if(!('speechSynthesis' in window)||!v)return false;
+  try{
+    var u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=Math.min(1.6,P.rate*0.95);
+    var spoke=false;
+    u.onstart=function(){spoke=true;};
+    u.onend=fin;u.onerror=function(){if(P.tok===my&&!spoke)return;fin();};
+    window.speechSynthesis.speak(u);
+    P.timers.push(setTimeout(function(){if(P.tok===my&&!spoke){try{window.speechSynthesis.cancel();}catch(e){}P.real=false;setHint();P.timers.push(setTimeout(fin,estDur(text,S.ui)*1000));}},1400));
+    P.timers.push(setTimeout(fin,estDur(text,S.ui)*1000*2.6+4000));
+    return true;
+  }catch(e){return false;}
+}
+function setHint(){
+  var h=$('#hint');if(!h)return;
+  if(P.real){h.textContent='';return;}
+  h.textContent=P.playing?t('hintNoVoice'):'';
+}
+function playLine(i){
+  var l=narrLines(P.p);
+  if(i>=l.length){finish();return;}
+  clearTimers();
+  var my=++P.tok;P.idx=i;P.lineStart=performance.now();
+  P.durs=l.map(function(txt){return estDur(txt,S.ui);});
+  $$('#lines .ln').forEach(function(e,k){e.classList.toggle('on',k===i);e.classList.toggle('done',k<i);$$('.w',e).forEach(function(w){w.classList.remove('k');});});
+  var cur=$('#lines .ln[data-i="'+i+'"]');
+  if(cur){var box=$('#lines');try{box.scrollTo({top:Math.max(0,cur.offsetTop-box.clientHeight*.3),behavior:'smooth'});}catch(e){box.scrollTop=Math.max(0,cur.offsetTop-box.clientHeight*.3);}}
+  var done=false,fin=function(){if(done||P.tok!==my||!P.playing)return;done=true;playLine(i+1);};
+  P.real=speakLine(l[i],my,fin);
+  if(!P.real)P.timers.push(setTimeout(fin,P.durs[i]*1000));
+  setHint();
+}
+function startPlay(){
+  if(!P.p)return;
+  P.playing=true;$('#player').classList.add('playing');
+  var pp=$('#pp');if(pp){pp.innerHTML=ic('pause');pp.setAttribute('aria-label',t('pauseLabel'));}
+  playLine(P.idx);
+  cancelAnimationFrame(P.raf);tick();
+}
+function pausePlay(){
+  P.playing=false;P.tok++;clearTimers();
+  var pl=$('#player');if(pl)pl.classList.remove('playing');
+  var pp=$('#pp');if(pp){pp.innerHTML=ic('play');pp.setAttribute('aria-label',t('playLabel'));}
+  setHint();
+}
+function tick(){
+  if(!P.playing)return;
+  var i=P.idx,el=(performance.now()-P.lineStart)/1000,d=P.durs[i]||1,f=Math.min(1,el/d);
+  var before=0;for(var k=0;k<i;k++)before+=P.durs[k];
+  var total=P.durs.reduce(function(a,b){return a+b;},0),cur=before+Math.min(el,d);
+  var fill=$('#pfill');if(fill)fill.style.width=Math.min(100,cur/total*100)+'%';
+  var tc=$('#tcur');if(tc)tc.textContent=fmt(cur);
+  var ws=$$('#lines .ln.on .w'),n=Math.floor(f*ws.length*1.06);
+  ws.forEach(function(w,k){w.classList.toggle('k',k<n);});
+  P.raf=requestAnimationFrame(tick);
+}
+function finish(){
+  pausePlay();
+  var fresh=!S.heard[P.p.id];S.heard[P.p.id]=1;saveHeard();
+  var fill=$('#pfill');if(fill)fill.style.width='100%';
+  $$('#lines .ln').forEach(function(e){e.classList.remove('on');e.classList.add('done');});
+  var next=STORY.filter(function(p){return !S.heard[p.id];})[0];
+  var d=$('#done');
+  d.innerHTML=fpSVG('',groupsNow())+'<div><b>'+(fresh?t('doneNewLines'):t('doneAlreadyHeard'))+'</b><span>'+nf(heardCount())+'/'+nf(STORY.length)+'</span><button class="btn" data-act="goto-print">'+t('seeMyPrint')+'</button>'+(next?'<button class="btn" data-act="close-player">'+t('continueTour')+'</button>':'')+'</div>';
+  d.classList.add('on');
+}
+function closePlayer(){
+  pausePlay();cancelAnimationFrame(P.raf);
+  $('#player').classList.remove('on');
+  if(S.tab==='map'||S.tab==='home'||S.tab==='print')renderTab(S.tab);
+}
+
+/* ---------- notifications ---------- */
+function showNotif(p){
+  var c=CATS[p.cat],n=$('#notif');
+  n.innerHTML='<span class="ico" style="background:'+c.color+'">'+ic(c.icon)+'</span><div class="tx"><b>'+t('notifNearPrefix')+' '+pn(p)+'</b><span>'+distTxt(p)+' · '+t('notifReady')+'</span></div><button class="btn sm" data-act="play" data-v="'+p.id+'">'+ic('play','f')+t('listenShort')+'</button>';
+  n.classList.add('on');
+}
+function hideNotif(){var n=$('#notif');if(n)n.classList.remove('on');}
+
+/* ---------- language switch ---------- */
+function applyUI(u){
+  if($('#player').classList.contains('on'))closePlayer();
+  closeSheet();
+  S.ui=u;saveUI();
+  var app=$('#app');app.setAttribute('dir',LANGS[u].dir);app.setAttribute('lang',u);
+  document.documentElement.setAttribute('lang',u);document.documentElement.setAttribute('dir',LANGS[u].dir);
+  loadVoices();
+  renderTabbar();renderTab(S.tab);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]');if(!el)return;
+  var a=el.dataset.act,v=el.dataset.v;
+  switch(a){
+    case 'tab':go(v);break;
+    case 'open':openSheet(v);break;
+    case 'openex':openExSheet(v);break;
+    case 'play':openPlayer(v);break;
+    case 'close-sheet':closeSheet();break;
+    case 'close-player':closePlayer();break;
+    case 'cat':S.filter=v;S.q='';go('explore');break;
+    case 'filter':S.filter=v;renderTab('explore');break;
+    case 'about':openAbout();break;
+    case 'lang':openLangSheet();break;
+    case 'setlang':applyUI(v);closeSheet();break;
+    case 'show-map':closeSheet();go('map');break;
+    case 'enable-geo':startGeo();break;
+    case 'toggle':P.playing?pausePlay():startPlay();break;
+    case 'next':
+    case 'prev':
+      if(P.p){var was=P.playing,d=(a==='next')?1:-1;P.idx=Math.max(0,Math.min(narrLines(P.p).length-1,P.idx+d));P.playing=true;playLine(P.idx);
+        if(!was){$('#player').classList.add('playing');$('#pp').innerHTML=ic('pause');tick();}}
+      break;
+    case 'speed':P.rate=P.rate===1?1.25:(P.rate===1.25?0.85:1);$('#spd').textContent=nf(P.rate)+'×';if(P.playing)playLine(P.idx);$('#ttot').textContent=fmt(totalDur(P.p,S.ui));break;
+    case 'goto-print':closePlayer();go('print');break;
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if($('#player').classList.contains('on'))closePlayer();else closeSheet();}});
+
+/* ---------- boot ---------- */
+(function boot(){
+  var app=$('#app');app.setAttribute('dir',LANGS[S.ui].dir);app.setAttribute('lang',S.ui);
+  document.documentElement.setAttribute('lang',S.ui);document.documentElement.setAttribute('dir',LANGS[S.ui].dir);
+  renderTabbar();
+  renderTab('home');renderTab('map');renderTab('explore');renderTab('print');
+  $('#p-home').classList.add('on');
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+  }
+})();
+})();
+
+</script>
+</body>
+</html>
